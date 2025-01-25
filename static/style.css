@@ -1,0 +1,15 @@
+.game-screen {
+	border-radius: 10px;
+	border: solid;
+}
+
+.player {
+	width: 50px;
+	height: 50px;
+	background-color: red;
+	position: absolute;
+}
+
+.assets {
+	display: none;
+}
