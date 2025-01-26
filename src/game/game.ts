@@ -1,13 +1,14 @@
+import { InputHandler } from "../input_handler/handler";
 import { FSM } from "../states/fsm";
 
 export class Game {
 	canvas: HTMLCanvasElement
-	dt: number;
+	dt: number = 0;
 	fsm: FSM = new FSM
+	inputHandler: InputHandler = new InputHandler
 
 	constructor() {
 		this.canvas = document.getElementById('game-screen') as HTMLCanvasElement;
-		this.dt = 0;
 	}
 
 	update() {

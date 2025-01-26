@@ -10,6 +10,9 @@ export class State {
 
 	clean() {
 		this.objects.length = 0
+		this.environments.map((env) => {
+			env.clean()
+		})
 		this.environments.length = 0
 	}
 

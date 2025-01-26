@@ -14,11 +14,19 @@ export interface GameObject {
 	render(): void
 }
 
+export type HitBox = {
+	x: number
+	y: number
+	w: number
+	h: number
+	visible: boolean
+}
+
 export interface Environment {
-	uuid: number
-	objects: GameObject[]
+	objects: unknown[]
 
 	update(): void
-	register(obj: GameObject): void
-	deregister(obj: GameObject | number): void
+	register(obj: unknown): void
+	deregister(obj: unknown): void
+	clean(): void
 }

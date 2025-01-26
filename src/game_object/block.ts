@@ -1,27 +1,43 @@
 import { Game, GameSingleton } from "../game/game";
-import { GameObject } from "./base";
+import { GameObject, HitBox } from "./base";
+import { InBoundsSingleton } from "./environments/out_of_bouds";
 
 export class Block implements GameObject {
 	uuid: number = 0
 	prio: number = 0
 	game: Game
 
-	x: number
-	y: number
+	hitbox: HitBox
 
-	constructor () {
+	move: boolean
+	color: string
+
+	constructor (x: number, y: number, w: number, h: number, move: boolean, color: string) {
 		this.game = GameSingleton.getInstance()
-		this.x = 0
-		this.y = 0
+		this.hitbox = { x, y, w, h, visible: true }
+		this.color = color
+		this.move = move
+
+		InBoundsSingleton.getInstance().register(this.hitbox)
 	}
 
 	update() {
-		this.x = (this.x > this.game.canvas.width) ? this.x = 0 : this.x + 1
+		const input = this.game.inputHandler
+
+		if (this.move) {
+			this.hitbox.y = (input.getKeyState('ArrowUp') === 'down') ? this.hitbox.y - 1 :
+				(input.getKeyState('ArrowDown') === 'down') ? this.hitbox.y + 1 :
+				this.hitbox.y
+			this.hitbox.x = (input.getKeyState('ArrowRight') === 'down') ? this.hitbox.x + 1 :
+				(input.getKeyState('ArrowLeft') === 'down') ? this.hitbox.x - 1 :
+				this.hitbox.x
+		}
 	}
 
 	render() {
 		const ctx = this.game.canvas.getContext('2d')
-		ctx.fillStyle = '#ff0000'
-		ctx.fillRect(this.x, this.y, 50, 50);
+		ctx.fillStyle = this.color
+		if (this.hitbox.visible)
+			ctx.fillRect(this.hitbox.x, this.hitbox.y, this.hitbox.w, this.hitbox.h);
 	}
 }
