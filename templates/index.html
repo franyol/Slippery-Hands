@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Boxing Through The DOM</title>
+    <title>Slippery Hands</title>
     <!-- Link to the stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
@@ -9,7 +9,7 @@
     <script src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
 </head>
 <body>
-	<canvas width="100%" height="100%" id='game-screen'></canvas>
+	<canvas style = 'margin: 0; padding: 0; box-sizing: border-box' id='game-screen'></canvas>
 
     <div class="assets">
         <!-- Image -->

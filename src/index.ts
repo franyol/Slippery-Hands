@@ -1,8 +1,9 @@
-import { Game } from './game/game'
+import { GameSingleton } from "./game/game";
+import { TestState } from "./states/test";
 
 window.addEventListener("load", () => {
-	const canvas = document.getElementById('game-screen') as HTMLCanvasElement;
-	const game = new Game(canvas);
+	const game = GameSingleton.getInstance()
+	game.fsm.pushState(new TestState())
 
 	let previousTime = performance.now();
 	function animate(currentTime: number) {

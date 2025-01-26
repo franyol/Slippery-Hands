@@ -1,15 +1,19 @@
-.game-screen {
-	border-radius: 10px;
-	border: solid;
+/* Remove default margin and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.player {
-	width: 50px;
-	height: 50px;
-	background-color: red;
-	position: absolute;
+html, body {
+    height: 100%; /* Ensure the body takes full height of the viewport */
+    width: 100%; /* Ensure the body takes full width of the viewport */
+    overflow: hidden; /* Prevent any overflow scrolling */
 }
 
-.assets {
-	display: none;
+/* Set canvas to take full screen */
+canvas {
+    display: block; /* Remove any unwanted space below the canvas */
+    width: 100vw; /* 100% of the viewport width */
+    height: 100vh; /* 100% of the viewport height */
 }
