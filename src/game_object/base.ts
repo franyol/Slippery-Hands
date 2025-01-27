@@ -19,7 +19,12 @@ export type HitBox = {
 	y: number
 	w: number
 	h: number
+	x_1: number
+	y_1: number
+	colliders: HitBox[]
 	visible: boolean
+	type: 'standard' | 'stop'
+	layer: number
 }
 
 export interface Environment {
