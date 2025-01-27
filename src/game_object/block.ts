@@ -37,11 +37,30 @@ export class Block implements GameObject {
 
 			this.hitbox.x_1 = this.hitbox.x
 			this.hitbox.y_1 = this.hitbox.y
-			this.hitbox.y = (input.getKeyState('ArrowUp') === 'down') ? this.hitbox.y - 1 :
-				(input.getKeyState('ArrowDown') === 'down') ? this.hitbox.y + 1 :
+
+			const coords = input.getTouchCoords()
+			let up, down, left, right
+
+			up = input.getKeyState('ArrowUp') === 'down'
+			if (coords) {
+				console.log(coords)
+				up = coords.y < this.game.canvas.height/4
+				down = coords.y > this.game.canvas.height*3/4
+				left = coords.x < this.game.canvas.width/4
+				right = coords.x > this.game.canvas.width*3/4
+			} else {
+				up = input.getKeyState('ArrowUp') === 'down'
+				down = input.getKeyState('ArrowDown') === 'down'
+				left = input.getKeyState('ArrowLeft') === 'down'
+				right = input.getKeyState('ArrowRight') === 'down'
+			}
+			
+
+			this.hitbox.y = (up) ? this.hitbox.y - 1 :
+				(down) ? this.hitbox.y + 1 :
 				this.hitbox.y
-			this.hitbox.x = (input.getKeyState('ArrowRight') === 'down') ? this.hitbox.x + 1 :
-				(input.getKeyState('ArrowLeft') === 'down') ? this.hitbox.x - 1 :
+			this.hitbox.x = (right) ? this.hitbox.x + 1 :
+				(left) ? this.hitbox.x - 1 :
 				this.hitbox.x
 
 		}
