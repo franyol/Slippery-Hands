@@ -19,8 +19,9 @@ export class Game {
 
 	render () {
 		const ctx = this.canvas.getContext('2d')
+		ctx.imageSmoothingEnabled = false
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-		ctx.fillStyle = 'black'
+		ctx.fillStyle = 'white'
 		ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 		this.fsm.render()
 	}

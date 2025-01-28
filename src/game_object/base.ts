@@ -14,6 +14,11 @@ export interface GameObject {
 	render(): void
 }
 
+export interface Physics {
+	xspeed: number
+	yspeed: number
+}
+
 export type HitBox = {
 	x: number
 	y: number
