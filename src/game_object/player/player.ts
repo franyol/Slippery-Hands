@@ -1,6 +1,6 @@
 import { Game, GameSingleton } from "../../game/game";
 import { Sprite } from "../../visual/sprite";
-import { GameObject, HitBox } from "../base";
+import { GameObject, HitBox, Physics } from "../base";
 import { CollidedSingleton } from "../environments/collisions";
 import { GravitySingleton } from "../environments/gravity";
 import { InBoundsSingleton } from "../environments/out_of_bouds";
@@ -12,17 +12,23 @@ export class Player implements GameObject {
 	prio: number = 0
 	game: Game
 
-	xspeed: number = 0
-	yspeed: number = 0
-
+	physics: Physics
 	hitbox: HitBox
 	sprite: Sprite
 
 	headingLeft: boolean = false
 
+	runningspeed: number = 40
+
 	constructor (x: number, y: number) {
 		this.game = GameSingleton.getInstance()
 		this.sprite = new Sprite(spritedir, 'main-character')
+		this.physics = new Physics(2)
+		this.physics.x = x
+		this.physics.y = y
+		this.hitbox = new HitBox(
+			this.physics, 0, 0, 100, 100, 'standard', 0
+		)
 		this.sprite.loadAnimations({
 			'stand': [0, 1],
 			'toiddle': [2],
@@ -35,25 +41,15 @@ export class Player implements GameObject {
 		})
 		this.sprite.setCurAnimation('stand')
 
-		this.hitbox = { 
-			x, y, w: 100, h: 100, 
-			x_1: x, y_1: y,
-			colliders: [], 
-			visible: true, 
-			type: 'standard',
-			layer: 0
-		}
-
 		InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
-		GravitySingleton.getInstance().register(this)
+		GravitySingleton.getInstance().register(this.hitbox)
 	}
 
 	update() {
 		const input = this.game.inputHandler
 
-		this.hitbox.x_1 = this.hitbox.x
-		this.hitbox.y_1 = this.hitbox.y
+		this.physics.recordHistory()
 
 		const coords = input.getTouchCoords()
 		let up, down, left, right
@@ -70,20 +66,27 @@ export class Player implements GameObject {
 			right = input.getKeyState('ArrowRight') === 'down'
 		}
 
-		this.xspeed = 0
+		this.physics.xspeed = 0
 		if (left) {
-			this.xspeed -= 2
+			this.physics.xspeed -= this.runningspeed
 			this.headingLeft = true
 		} else if (right) {
-			this.xspeed += 2
+			this.physics.xspeed += this.runningspeed
 			this.headingLeft = false
 		}
 
+		this.hitbox.colliders.map((collider) => {
+			if (collider.y >= this.physics.y + this.hitbox.h)
+				if (up) {
+					this.physics.yspeed -= 250
+				}
+		})
+
 		// Trigger animations by condition
-		if (this.xspeed === 0 && 
+		if (this.physics.xspeed === 0 && 
 			!['stand', 'tostand'].includes(this.sprite.curAnimation)) {
 			this.sprite.setCurAnimation('tostand')
-		} else if (this.xspeed !== 0 &&
+		} else if (this.physics.xspeed !== 0 &&
 			!['run', 'torun'].includes(this.sprite.curAnimation)) {
 			this.sprite.setCurAnimation('torun')
 		}
@@ -100,8 +103,7 @@ export class Player implements GameObject {
 			}
 		}
 
-		this.hitbox.x += this.xspeed
-		this.hitbox.y += this.yspeed
+		this.physics.update()
 	}
 
 	render() {

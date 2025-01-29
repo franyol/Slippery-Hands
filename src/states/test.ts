@@ -16,7 +16,8 @@ export class TestState extends State {
 
 		this.register(new Player(width/2, 0))
 		//this.register(new Block(width/2, height/2, 40, 40, true, 'red'))
-		this.register(new Block(width/4, height/2+40, width/2, 40, false, 'blue'))
+		this.register(new Block(width/4, height*3/5, width/2, 40, false, 'blue'))
+		this.register(new Block(width/4, height*4/5+100, width, 10, false, 'green'))
 	}
 	on_exit() {
 		this.clean()

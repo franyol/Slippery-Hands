@@ -9,7 +9,7 @@ export class Collided implements Environment {
 
 	update() {
 		for (let i = 0; i < this.objects.length; i++) {
-			this.objects[i].colliders.length = 0;
+			this.objects[i].colliders = [];
 		}
 		for (let i = 0; i < this.objects.length; i++) {
 			for (let j = i + 1; j < this.objects.length; j++) {
@@ -25,14 +25,18 @@ export class Collided implements Environment {
 				case 'standard':
 					hb.colliders.map((collider) => {
 					if (collider.type !== 'stop') return
-					if (hb.x_1+hb.w <= collider.x) {
-						hb.x = collider.x - hb.w
-					} else if (hb.x_1 >= collider.x+collider.w) {
-						hb.x = collider.x+collider.w
-					} else if (hb.y_1+hb.h <= collider.y) {
-						hb.y = collider.y - hb.h
-					} else if (hb.y_1 >= collider.y+collider.h) {
-						hb.y = collider.y+collider.h
+					if (hb.getx(1)+hb.w <= collider.x) {
+						hb.parent.x = collider.x - hb.w
+						hb.parent.xspeed = 0
+					} else if (hb.getx(1) >= collider.x+collider.w) {
+						hb.parent.x = collider.x+collider.w
+						hb.parent.xspeed = 0
+					} else if (hb.gety(1)+hb.h <= collider.y) {
+						hb.parent.y = collider.y - hb.h
+						hb.parent.yspeed = 0
+					} else if (hb.gety(1) >= collider.y+collider.h) {
+						hb.parent.y = collider.y+collider.h
+						hb.parent.yspeed = 0
 					}
 				})
 					break;

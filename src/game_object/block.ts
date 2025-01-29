@@ -1,5 +1,5 @@
 import { Game, GameSingleton } from "../game/game";
-import { GameObject, HitBox } from "./base";
+import { GameObject, HitBox, Physics } from "./base";
 import { CollidedSingleton } from "./environments/collisions";
 import { InBoundsSingleton } from "./environments/out_of_bouds";
 
@@ -9,21 +9,19 @@ export class Block implements GameObject {
 	game: Game
 
 	hitbox: HitBox
+	physics: Physics
 
 	move: boolean
-	color: string
 
 	constructor (x: number, y: number, w: number, h: number, move: boolean, color: string) {
 		this.game = GameSingleton.getInstance()
-		this.hitbox = { 
-			x, y, w, h, 
-			x_1: x, y_1: y,
-			colliders: [], 
-			visible: true, 
-			type: (move) ? 'standard' : 'stop',
-			layer: 0
-		}
-		this.color = color
+		this.physics = new Physics((move) ? 2 : 1)
+		this.physics.x = x
+		this.physics.y = y
+		this.hitbox = new HitBox(
+			this.physics, 0, 0, w, h, (move) ? 'standard' : 'stop', 0
+		)
+		this.hitbox.color = color
 		this.move = move
 
 		InBoundsSingleton.getInstance().register(this.hitbox)
@@ -35,8 +33,7 @@ export class Block implements GameObject {
 
 		if (this.move) {
 
-			this.hitbox.x_1 = this.hitbox.x
-			this.hitbox.y_1 = this.hitbox.y
+			this.physics.recordHistory()
 
 			const coords = input.getTouchCoords()
 			let up, down, left, right
@@ -56,20 +53,14 @@ export class Block implements GameObject {
 			}
 			
 
-			this.hitbox.y = (up) ? this.hitbox.y - 1 :
-				(down) ? this.hitbox.y + 1 :
-				this.hitbox.y
-			this.hitbox.x = (right) ? this.hitbox.x + 1 :
-				(left) ? this.hitbox.x - 1 :
-				this.hitbox.x
+			this.physics.yspeed = (up) ? -25 : (down) ? 25 : 0
+			this.physics.xspeed = (right) ? 25 :(left) ? -25 : 0
 
+			this.physics.update()
 		}
 	}
 
 	render() {
-		const ctx = this.game.canvas.getContext('2d')
-		ctx.fillStyle = this.color
-		if (this.hitbox.visible)
-			ctx.fillRect(this.hitbox.x, this.hitbox.y, this.hitbox.w, this.hitbox.h);
+		this.hitbox.render()
 	}
 }

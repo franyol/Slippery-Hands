@@ -6,9 +6,12 @@
 }
 
 html, body {
-    height: 100%; /* Ensure the body takes full height of the viewport */
-    width: 100%; /* Ensure the body takes full width of the viewport */
-    overflow: hidden; /* Prevent any overflow scrolling */
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 /* Set canvas to take full screen */

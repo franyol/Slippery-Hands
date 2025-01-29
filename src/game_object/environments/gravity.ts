@@ -1,29 +1,27 @@
-import { GameSingleton } from "../../game/game";
-import { Environment, Physics } from "../base";
+import { Environment, HitBox } from "../base";
 
 export class Gravity implements Environment {
-	objects: Physics[] = []
+	objects: HitBox[] = []
 
 	clean() {
 		this.objects.length = 0
 	}
 
 	update() {
-		const game = GameSingleton.getInstance()
 		this.objects.map((o) => {
-			if (o.yspeed < 5) {
-				o.yspeed += 15 * (game.dt/1000)
-			} else if (o.yspeed > 7) {
-				o.yspeed -= 15 * (game.dt/1000)
+			if (o.parent.yspeed < 60) {
+				o.parent.yspeed += 10 
+			} else if (o.parent.yspeed > 70) {
+				o.parent.yspeed -= 10
 			}
 		})
 	}
 
-	register(obj: Physics) {
+	register(obj: HitBox) {
 		this.objects.push(obj)
 	}
 
-	deregister(obj: Physics): void {
+	deregister(obj: HitBox): void {
 		this.objects = this.objects.filter((o) => o !== obj);
 	}
 }

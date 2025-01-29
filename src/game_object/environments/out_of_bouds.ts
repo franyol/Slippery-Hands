@@ -13,10 +13,10 @@ export class InBounds implements Environment {
 		const canvas = game.canvas
 
 		this.objects.map((obj) => {
-			if (obj.x + obj.w > canvas.width) obj.x = canvas.width - obj.w;
-			else if (obj.x < 0) obj.x = 0;
-			if (obj.y + obj.h > canvas.height) obj.y = canvas.height - obj.h;
-			else if (obj.y < 0) obj.y = 0;
+			if (obj.x + obj.w > canvas.width) obj.parent.x = canvas.width - obj.w;
+			else if (obj.x < 0) obj.parent.x = 0;
+			if (obj.y + obj.h > canvas.height) obj.parent.y = canvas.height - obj.h;
+			else if (obj.y < 0) obj.parent.y = 0;
 		})
 	}
 
