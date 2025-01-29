@@ -10,7 +10,8 @@
     <script src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
 </head>
 <body>
-	<canvas style = 'margin: 0; padding: 0; box-sizing: border-box' id='game-screen'></canvas>
+	<canvas id="game-screen" style="margin: 0; padding: 0; box-sizing: border-box;"></canvas>
+	<canvas id="ui-layer" style="position: absolute; top: 0; left: 0;"></canvas>
 
     <div class="assets">
         <!-- Image -->

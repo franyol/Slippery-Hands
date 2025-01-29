@@ -24,7 +24,7 @@ export class Block implements GameObject {
 		this.hitbox.color = color
 		this.move = move
 
-		InBoundsSingleton.getInstance().register(this.hitbox)
+		//InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
 	}
 

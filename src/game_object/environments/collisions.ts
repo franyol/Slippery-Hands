@@ -25,18 +25,23 @@ export class Collided implements Environment {
 				case 'standard':
 					hb.colliders.map((collider) => {
 					if (collider.type !== 'stop') return
-					if (hb.getx(1)+hb.w <= collider.x) {
+					const x_1 = hb.getx(1)
+					const y_1 = hb.gety(1)
+					if (x_1+hb.w <= collider.x) {
 						hb.parent.x = collider.x - hb.w
 						hb.parent.xspeed = 0
-					} else if (hb.getx(1) >= collider.x+collider.w) {
+					} else if (x_1 >= collider.x+collider.w) {
 						hb.parent.x = collider.x+collider.w
 						hb.parent.xspeed = 0
-					} else if (hb.gety(1)+hb.h <= collider.y) {
+					} else if (y_1+hb.h <= collider.y) {
 						hb.parent.y = collider.y - hb.h
 						hb.parent.yspeed = 0
-					} else if (hb.gety(1) >= collider.y+collider.h) {
+					} else if (y_1 >= collider.y+collider.h) {
 						hb.parent.y = collider.y+collider.h
 						hb.parent.yspeed = 0
+					} else {
+						console.log(`x_1: ${x_1} x_2: ${hb.w} y_1: ${y_1}`)
+						console.log(collider)
 					}
 				})
 					break;
@@ -48,9 +53,11 @@ export class Collided implements Environment {
 
 	collided(a: HitBox, b: HitBox) {
 		if (a.layer !== b.layer) return false
-		return ((a.x >= b.x && a.x <= b.x+b.w || a.x+a.w <= b.x+b.w && a.x+a.w >= b.x)
-				&&
-				(a.y >= b.y && a.y <= b.y+b.h || a.y+a.h <= b.y+b.h && a.y+a.h >= b.y))
+
+		const xOverlap = a.x < b.x + b.w && a.x + a.w > b.x;
+		const yOverlap = a.y < b.y + b.h && a.y + a.h > b.y;
+
+		return xOverlap && yOverlap;
 	}
 
 	register(obj: HitBox) {

@@ -19,6 +19,7 @@ export class Player implements GameObject {
 	headingLeft: boolean = false
 
 	runningspeed: number = 40
+	jumpingForce: number = 180
 
 	constructor (x: number, y: number) {
 		this.game = GameSingleton.getInstance()
@@ -55,12 +56,12 @@ export class Player implements GameObject {
 		let up, down, left, right
 
 		if (coords) {
-			up = coords.y < this.game.canvas.height/4
-			down = coords.y > this.game.canvas.height*3/4
-			left = coords.x < this.game.canvas.width/4
-			right = coords.x > this.game.canvas.width*3/4
+			up = coords.y < window.innerHeight/4
+			down = coords.y > window.innerHeight*3/4
+			left = coords.x < window.innerWidth/4
+			right = coords.x > window.innerWidth*3/4
 		} else {
-			up = input.getKeyState('ArrowUp') === 'down'
+			up = input.getKeyOnce('ArrowUp') === 'down'
 			down = input.getKeyState('ArrowDown') === 'down'
 			left = input.getKeyState('ArrowLeft') === 'down'
 			right = input.getKeyState('ArrowRight') === 'down'
@@ -78,7 +79,7 @@ export class Player implements GameObject {
 		this.hitbox.colliders.map((collider) => {
 			if (collider.y >= this.physics.y + this.hitbox.h)
 				if (up) {
-					this.physics.yspeed -= 250
+					this.physics.yspeed -= this.jumpingForce
 				}
 		})
 
