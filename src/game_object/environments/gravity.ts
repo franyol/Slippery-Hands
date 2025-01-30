@@ -1,3 +1,4 @@
+import { GameSingleton } from "../../game/game";
 import { Environment, HitBox } from "../base";
 
 export class Gravity implements Environment {
@@ -8,11 +9,12 @@ export class Gravity implements Environment {
 	}
 
 	update() {
+		const dt = GameSingleton.getInstance().dt
 		this.objects.map((o) => {
-			if (o.parent.yspeed < 60) {
-				o.parent.yspeed += 10 
-			} else if (o.parent.yspeed > 70) {
-				o.parent.yspeed -= 10
+			if (o.parent.yspeed < 80) {
+				o.parent.yspeed += 100 * dt/100
+			} else if (o.parent.yspeed >= 100) {
+				o.parent.yspeed -= 100 * dt/100
 			}
 		})
 	}

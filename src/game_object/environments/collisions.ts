@@ -28,16 +28,16 @@ export class Collided implements Environment {
 					const x_1 = hb.getx(1)
 					const y_1 = hb.gety(1)
 					if (x_1+hb.w <= collider.x) {
-						hb.parent.x = collider.x - hb.w
+						hb.parent.x = collider.x - hb.w - hb._x
 						hb.parent.xspeed = 0
 					} else if (x_1 >= collider.x+collider.w) {
-						hb.parent.x = collider.x+collider.w
+						hb.parent.x = collider.x+collider.w - hb._x
 						hb.parent.xspeed = 0
 					} else if (y_1+hb.h <= collider.y) {
-						hb.parent.y = collider.y - hb.h
+						hb.parent.y = collider.y - hb.h - hb._y
 						hb.parent.yspeed = 0
 					} else if (y_1 >= collider.y+collider.h) {
-						hb.parent.y = collider.y+collider.h
+						hb.parent.y = collider.y+collider.h - hb._y
 						hb.parent.yspeed = 0
 					} else {
 						console.log(`x_1: ${x_1} x_2: ${hb.w} y_1: ${y_1}`)

@@ -14,12 +14,14 @@ export class Player implements GameObject {
 
 	physics: Physics
 	hitbox: HitBox
+	printbox: HitBox
 	sprite: Sprite
 
 	headingLeft: boolean = false
 
 	runningspeed: number = 40
-	jumpingForce: number = 180
+	jumpingForce: number = 210
+	iddleTime: number = 5000
 
 	constructor (x: number, y: number) {
 		this.game = GameSingleton.getInstance()
@@ -27,13 +29,16 @@ export class Player implements GameObject {
 		this.physics = new Physics(2)
 		this.physics.x = x
 		this.physics.y = y
+		this.printbox = new HitBox(
+			this.physics, 0, 0, 64, 64, 'standard', 0
+		)
 		this.hitbox = new HitBox(
-			this.physics, 0, 0, 100, 100, 'standard', 0
+			this.physics, 7, 0, 50, 64, 'standard', 0
 		)
 		this.sprite.loadAnimations({
 			'stand': [0, 1],
 			'toiddle': [2],
-			'iddle': [3, 4],
+			'iddle': [3, 4, 3, 4, 3, 4, 3],
 			'tostand': [5],
 			'toprepare': [5],
 			'prepare': [6, 7],
@@ -83,10 +88,19 @@ export class Player implements GameObject {
 				}
 		})
 
+		this.handleAnimations()
+
+		this.physics.update()
+	}
+
+	handleAnimations() {
 		// Trigger animations by condition
-		if (this.physics.xspeed === 0 && 
-			!['stand', 'tostand'].includes(this.sprite.curAnimation)) {
-			this.sprite.setCurAnimation('tostand')
+		if (this.physics.xspeed === 0) {
+			if (this.sprite.animTime > this.iddleTime) {
+				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
+			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle'].includes(this.sprite.curAnimation)) {
+				this.sprite.setCurAnimation('prepare')	
+			}
 		} else if (this.physics.xspeed !== 0 &&
 			!['run', 'torun'].includes(this.sprite.curAnimation)) {
 			this.sprite.setCurAnimation('torun')
@@ -95,21 +109,26 @@ export class Player implements GameObject {
 		// Trigger animations automatically
 		if (this.sprite.update()) {
 			switch(this.sprite.curAnimation) {
+				case 'toprepare':
+					this.sprite.setCurAnimation('prepare')
+					break;
 				case 'tostand':
+				case 'iddle':
 					this.sprite.setCurAnimation('stand')
-				break;
+					break;
 				case 'torun':
 					this.sprite.setCurAnimation('run')
-				break;
+					break;
+				case 'toiddle':
+					this.sprite.setCurAnimation('iddle')
+					break;
 			}
 		}
-
-		this.physics.update()
 	}
 
 	render() {
-		if (this.hitbox) {
-			this.sprite.render(this.hitbox.x, this.hitbox.y, this.hitbox.w, this.hitbox.h, this.headingLeft)
+		if (this.printbox) {
+			this.sprite.render(this.printbox.x, this.printbox.y, this.printbox.w, this.printbox.h, this.headingLeft)
 		}
 	}
 }

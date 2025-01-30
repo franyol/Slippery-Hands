@@ -105,7 +105,7 @@ export class Sprite {
 				this.animIdx++;
 				if (this.animIdx >= this.animations[this.curAnimation].length) {
 					this.animIdx = 0
-					this.animTime = 0
+					//this.animTime = 0
 					this.current = this.animations[this.curAnimation][this.animIdx]
 					return true // Anim end
 				}
