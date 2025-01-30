@@ -9,6 +9,10 @@ export class Game {
 	inputHandler: InputHandler = new InputHandler
 	width: number = 1080
 	height: number = 720
+	camx: number = 0
+	camy: number = 0
+	camw: number = 540
+	camh: number = 360
 
 	constructor() {
 		this.canvas = document.getElementById('game-screen') as HTMLCanvasElement;
@@ -21,22 +25,34 @@ export class Game {
 		this.fsm.update()
 	}
 
-	render () {
-		const ctx = this.canvas.getContext('2d')
-		ctx.imageSmoothingEnabled = false
-		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-		ctx.fillStyle = 'yellow'
-		ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
-		this.fsm.render()
 
-		const scaleX = window.innerWidth / this.width;
-		const scaleY = window.innerHeight / this.height;
-		const scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
+	render() {
+		const ctx = this.canvas.getContext('2d');
+		ctx.imageSmoothingEnabled = false;
+		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-		const newWidth = this.width * scale;
-		const newHeight = this.height * scale;
+		ctx.save();
 
-		// Center the canvas
+		ctx.setTransform(
+			this.canvas.width / this.camw, 0, 0,
+			this.canvas.height / this.camh,
+			-this.camx * (this.canvas.width / this.camw),
+			-this.camy * (this.canvas.height / this.camh)
+		);
+
+		ctx.fillStyle = 'yellow';
+		ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.fsm.render();
+
+		ctx.restore();
+
+		const scaleX = window.innerWidth / this.camw;
+		const scaleY = window.innerHeight / this.camh;
+		const scale = Math.min(scaleX, scaleY);
+
+		const newWidth = this.camw * scale;
+		const newHeight = this.camh * scale;
+
 		this.canvas.style.width = `${newWidth}px`;
 		this.canvas.style.height = `${newHeight}px`;
 		this.canvas.style.position = 'absolute';

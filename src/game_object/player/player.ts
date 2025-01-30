@@ -1,6 +1,7 @@
 import { Game, GameSingleton } from "../../game/game";
 import { Sprite } from "../../visual/sprite";
 import { GameObject, HitBox, Physics } from "../base";
+import { CameraFollowSingleton } from "../environments/cam_follow";
 import { CollidedSingleton } from "../environments/collisions";
 import { GravitySingleton } from "../environments/gravity";
 import { InBoundsSingleton } from "../environments/out_of_bouds";
@@ -50,6 +51,7 @@ export class Player implements GameObject {
 		InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
 		GravitySingleton.getInstance().register(this.hitbox)
+		CameraFollowSingleton.getInstance().register(this.printbox)
 	}
 
 	update() {

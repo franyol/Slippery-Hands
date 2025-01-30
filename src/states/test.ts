@@ -1,5 +1,6 @@
 import { GameSingleton } from "../game/game";
 import { Block } from "../game_object/block";
+import { CameraFollowSingleton } from "../game_object/environments/cam_follow";
 import { CollidedSingleton } from "../game_object/environments/collisions";
 import { GravitySingleton } from "../game_object/environments/gravity";
 import { InBoundsSingleton } from "../game_object/environments/out_of_bouds";
@@ -15,6 +16,7 @@ export class TestState extends State {
 		this.environments.push(InBoundsSingleton.getInstance())
 		this.environments.push(CollidedSingleton.getInstance())
 		this.environments.push(GravitySingleton.getInstance())
+		this.environments.push(CameraFollowSingleton.getInstance())
 
 		this.register(new Player(width/2, 0))
 		//this.register(new Block(width/2, height/2, 40, 40, true, 'red'))
