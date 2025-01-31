@@ -5,7 +5,7 @@
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-	"dev": "npm run build; python3 app.py"
+	"dev": "python3 scripts/watcher.py"
   },
   "author": "",
   "license": "ISC",

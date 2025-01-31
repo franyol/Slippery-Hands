@@ -1,7 +1,6 @@
 import { Game, GameSingleton } from "../game/game";
 import { GameObject, HitBox, Physics } from "./base";
 import { CollidedSingleton } from "./environments/collisions";
-import { InBoundsSingleton } from "./environments/out_of_bouds";
 
 export class Block implements GameObject {
 	uuid: number = 0
