@@ -111,11 +111,9 @@ export class Player implements GameObject {
 				}
 				if (this.headbumping) {
 					this.cantmove = true
-				}
-				if (this.headbumping) {
 					this.sprite.setCurAnimation('bumppain')
 				}
-			} else if (collider.y + collider.h <= this.hitbox.y) {
+			} else if (collider.y + collider.h <= this.hitbox.y && collider.type === 'stop') {
 				this.headbumping = true
 			}
 		})
