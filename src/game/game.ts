@@ -11,8 +11,15 @@ export class Game {
 	height: number = 720
 	camx: number = 0
 	camy: number = 0
-	camw: number = 540
-	camh: number = 360
+	_camsize: number = 50
+	camw: number = 16 * this._camsize
+	camh: number = 9 * this._camsize
+
+	set camsize(value: number) {
+		this._camsize = value
+		this.camw = 16 * value
+		this.camh = 9 * value
+	}
 
 	constructor() {
 		this.canvas = document.getElementById('game-screen') as HTMLCanvasElement;
