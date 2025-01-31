@@ -39,6 +39,7 @@ export class Player implements GameObject {
 		this.sprite.loadAnimations({
 			'stand': [0, 1],
 			'toiddle': [2],
+			'fromiddle': [2],
 			'iddle': [3, 4, 3, 4, 3, 4, 3],
 			'tostand': [5],
 			'toprepare': [5],
@@ -100,7 +101,7 @@ export class Player implements GameObject {
 		if (this.physics.xspeed === 0) {
 			if (this.sprite.animTime > this.iddleTime) {
 				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
-			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle'].includes(this.sprite.curAnimation)) {
+			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle'].includes(this.sprite.curAnimation)) {
 				this.sprite.setCurAnimation('prepare')	
 			}
 		} else if (this.physics.xspeed !== 0 &&
@@ -115,7 +116,12 @@ export class Player implements GameObject {
 					this.sprite.setCurAnimation('prepare')
 					break;
 				case 'tostand':
+					this.sprite.setCurAnimation('stand')
+					break;
 				case 'iddle':
+					this.sprite.setCurAnimation('fromiddle')
+					break;
+				case 'fromiddle':
 					this.sprite.setCurAnimation('stand')
 					break;
 				case 'torun':
