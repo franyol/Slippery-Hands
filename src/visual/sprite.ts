@@ -139,9 +139,9 @@ export class Sprite {
 			ctx.drawImage(
 				this.image,
 				frame.x,
-				frame.y+1,
+				frame.y,
 				frame.w,
-				frame.h-1,
+				frame.h,
 				-w / 2,
 				-h / 2,
 				w,

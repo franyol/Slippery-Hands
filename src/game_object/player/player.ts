@@ -19,6 +19,12 @@ export class Player implements GameObject {
 	sprite: Sprite
 
 	headingLeft: boolean = false
+	jumping: boolean = false
+	falling: boolean = false
+	headbumping: boolean = false
+	rolling: boolean = false
+	running: boolean = false
+	cantmove: boolean = false
 
 	runningspeed: number = 40
 	jumpingForce: number = 210
@@ -42,6 +48,14 @@ export class Player implements GameObject {
 			'fromiddle': [2],
 			'iddle': [3, 4, 3, 4, 3, 4, 3],
 			'tostand': [5],
+			'tostilljump': [16],
+			'stilljump': [17],
+			'torunjump': [31],
+			'runjump': [13],
+			'falling': [18],
+			'bumpfalling': [19],
+			'bumppain': [20, 21, 22, 21, 22, 23, 24, 23, 24, 22, 20],
+			'runfalling': [13],
 			'toprepare': [5],
 			'prepare': [6, 7],
 			'torun': [8],
@@ -76,20 +90,36 @@ export class Player implements GameObject {
 		}
 
 		this.physics.xspeed = 0
-		if (left) {
+		this.running = false
+		if (left && !this.cantmove) {
 			this.physics.xspeed -= this.runningspeed
 			this.headingLeft = true
-		} else if (right) {
+			this.running = true
+		} else if (right && !this.cantmove) {
 			this.physics.xspeed += this.runningspeed
 			this.headingLeft = false
+			this.running = true
 		}
 
 		this.hitbox.colliders.map((collider) => {
-			if (collider.y >= this.physics.y + this.hitbox.h)
-				if (up) {
+			if (collider.y >= this.physics.y + this.hitbox.h) {
+				if (up && !this.cantmove && !this.headbumping) {
 					this.physics.yspeed -= this.jumpingForce
+					this.jumping = true
+				} else {
+					this.jumping = false
 				}
+				if (this.headbumping) {
+					this.cantmove = true
+				}
+				if (this.headbumping) {
+					this.sprite.setCurAnimation('bumppain')
+				}
+			} else if (collider.y + collider.h <= this.hitbox.y) {
+				this.headbumping = true
+			}
 		})
+		this.falling = this.jumping && this.physics.yspeed > 0
 
 		this.handleAnimations()
 
@@ -98,15 +128,36 @@ export class Player implements GameObject {
 
 	handleAnimations() {
 		// Trigger animations by condition
-		if (this.physics.xspeed === 0) {
+		if (!this.running && !this.jumping) {
 			if (this.sprite.animTime > this.iddleTime) {
 				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
-			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle'].includes(this.sprite.curAnimation)) {
+			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain'].includes(this.sprite.curAnimation)) {
 				this.sprite.setCurAnimation('prepare')	
 			}
-		} else if (this.physics.xspeed !== 0 &&
+		} else if (this.running && !this.jumping &&
 			!['run', 'torun'].includes(this.sprite.curAnimation)) {
 			this.sprite.setCurAnimation('torun')
+		} else if (this.jumping) {
+			if (this.falling) {
+				if (this.headbumping) {
+					if (!['bumpfalling'].includes(this.sprite.curAnimation))
+					this.sprite.setCurAnimation('bumpfalling')
+				} else if (!this.running) {
+					if (!['falling'].includes(this.sprite.curAnimation))
+					this.sprite.setCurAnimation('falling')
+				} else {
+					if (!['runfalling'].includes(this.sprite.curAnimation))
+					this.sprite.setCurAnimation('runfalling')
+				}
+			} else {
+				if (!this.running) {
+					if (!['stilljump', 'tostilljump'].includes(this.sprite.curAnimation))
+					this.sprite.setCurAnimation('tostilljump')
+				} else {
+					if (!['runjump', 'torunjump'].includes(this.sprite.curAnimation))
+					this.sprite.setCurAnimation('torunjump')
+				}
+			}
 		}
 
 		// Trigger animations automatically
@@ -129,6 +180,17 @@ export class Player implements GameObject {
 					break;
 				case 'toiddle':
 					this.sprite.setCurAnimation('iddle')
+					break;
+				case 'tostilljump':
+					this.sprite.setCurAnimation('stilljump')
+					break;
+				case 'tosrunjump':
+					this.sprite.setCurAnimation('runjump')
+					break;
+				case 'bumppain':
+					this.headbumping = false
+					this.cantmove = false
+					this.sprite.setCurAnimation('stand')
 					break;
 			}
 		}
