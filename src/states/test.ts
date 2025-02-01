@@ -18,12 +18,38 @@ export class TestState extends State {
 		this.environments.push(GravitySingleton.getInstance())
 		this.environments.push(CameraFollowSingleton.getInstance())
 
-		this.register(new Player(width/2, 0))
-		//this.register(new Block(width/2, height/2, 40, 40, true, 'red'))
-		this.register(new Block(width/4+200, height*3/5-40, 40, 40, false, 'red'))
-		this.register(new Block(width/4, height*3/5, width/2, 40, false, 'blue'))
-		this.register(new Block(width/4-60, height*3/5+90, 40, 40, false, 'red'))
-		this.register(new Block(0, height*4/5+100, width, 10, false, 'green'))
+		this.register(new Player(0, 1500));
+
+		// Starting platform
+		this.register(new Block(0, 1800, 800, 100, false, 'blue'));
+
+		// First obstacle (must jump)
+		this.register(new Block(200, 1560, 80, 200, false, 'blue'));
+
+		// Small gap for rolling
+		this.register(new Block(400, 1600, 200, 100, false, 'blue'));
+		this.register(new Block(700, 1600, 160, 100, false, 'blue'));
+
+		// Higher platform (jump required)
+		this.register(new Block(1000, 1500, 200, 100, false, 'blue'));
+
+		// Series of platforms
+		this.register(new Block(1300, 1400, 150, 40, false, 'blue'));
+		this.register(new Block(1500, 1300, 150, 40, false, 'blue'));
+		this.register(new Block(1700, 1200, 150, 40, false, 'blue'));
+		this.register(new Block(1800, 1100, 150, 40, false, 'blue'));
+
+		// Wide gap with small platform in between
+		this.register(new Block(2000, 1000, 100, 40, false, 'blue'));
+		this.register(new Block(2300, 1000, 100, 40, false, 'blue'));
+
+		// Landing platform
+		this.register(new Block(2600, 1400, 300, 100, false, 'blue'));
+
+		// End section with an obstacle
+		this.register(new Block(3000, 1300, 80, 200, false, 'blue'));
+		this.register(new Block(3200, 1800, 500, 100, false, 'blue'));
+
 	}
 	on_exit() {
 		this.clean()

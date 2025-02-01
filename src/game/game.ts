@@ -7,8 +7,8 @@ export class Game {
 	dt: number = 0;
 	fsm: FSM = new FSM
 	inputHandler: InputHandler = new InputHandler
-	width: number = 1080
-	height: number = 720
+	width: number = 10000
+	height: number = 2000
 	camx: number = 0
 	camy: number = 0
 	_camsize: number = 50
