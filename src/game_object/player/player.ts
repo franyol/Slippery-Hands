@@ -25,8 +25,10 @@ export class Player implements GameObject {
 	rolling: boolean = false
 	running: boolean = false
 	cantmove: boolean = false
+	onfloor: boolean = false
 
 	runningspeed: number = 40
+	rollspeed: number = 60
 	jumpingForce: number = 210
 	iddleTime: number = 5000
 
@@ -107,7 +109,7 @@ export class Player implements GameObject {
 		this.physics.xspeed = 0
 		this.running = false
 		if (this.rolling && !this.cantmove) {
-			this.physics.xspeed = ((this.headingLeft) ? -2 : 2) * this.runningspeed
+			this.physics.xspeed = (this.headingLeft) ? -this.rollspeed : this.rollspeed
 		} else if (left && !this.cantmove) {
 			this.physics.xspeed -= this.runningspeed
 			this.headingLeft = true
@@ -122,25 +124,30 @@ export class Player implements GameObject {
 			this.cooldowns['rolling'].request()
 		}
 
+		this.onfloor = false
 		this.hitbox.colliders.map((collider) => {
 			if (collider.y >= this.physics.y + this.hitbox.h) {
-				if (up && !this.cantmove && !this.headbumping) {
-					this.physics.yspeed -= this.jumpingForce
-					this.jumping = true
-					this.rolling = false
-					this.hitbox._y = 0
-					this.hitbox.h = 64
-				} else {
-					this.jumping = false
-				}
-				if (this.headbumping) {
-					this.cantmove = true
-					this.sprite.setCurAnimation('bumppain')
-				}
+				this.onfloor = true
 			} else if (collider.y + collider.h <= this.hitbox.y && collider.type === 'stop' && !this.rolling) {
 				this.headbumping = true
 			}
 		})
+
+		if (up && !this.cantmove && !this.headbumping && this.onfloor) {
+			this.physics.yspeed -= this.jumpingForce
+			this.jumping = true
+			this.rolling = false
+			this.hitbox._y = 0
+			this.hitbox.h = 64
+		} else if (this.onfloor) {
+			this.jumping = false
+		} else {
+			this.jumping = true
+		}
+		if (this.headbumping) {
+			this.cantmove = true
+			this.sprite.setCurAnimation('bumppain')
+		}
 		this.falling = this.jumping && this.physics.yspeed > 0
 
 		this.handleAnimations()

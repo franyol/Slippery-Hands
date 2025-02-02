@@ -1,11 +1,23 @@
 import { GameSingleton } from "../game/game";
+import { GameObject } from "../game_object/base";
 
 type KeyState = 'up' | 'down' | 'iddle';
+
+export class Button {
+	keybinding: string
+	virtual: GameObject
+}
+
+export class Joystick {
+	keybindings: string[]
+	virtual: GameObject
+}
 
 export class InputHandler {
 	private keys: Map<string, KeyState>;
 	private keysReleased: Map<string, boolean>;
 	private touchCoords: { x: number; y: number } | null;
+	showVirtual: boolean = false
 
 	constructor() {
 		this.keys = new Map<string, KeyState>();
