@@ -8,7 +8,13 @@ type FrameData = {
 	duration: number
 }
 
+type ImageRegister =  {
+	image: HTMLImageElement,
+	instances: number
+}
+
 export class Sprite {
+	static loadedImages: Record<string, ImageRegister> = {}
 	image: HTMLImageElement;
 	data: { frames: Map<string, FrameData> };
 	current: number;
@@ -31,7 +37,15 @@ export class Sprite {
 		this.imgLoaded = false;
 		this.dataLoaded = false;
 
-		this.loadImage(dir + name + '.png');
+		const imgDir = dir + name + '.png'
+		if (imgDir in Sprite.loadedImages) {
+			this.image = Sprite.loadedImages[imgDir].image
+			Sprite.loadedImages[imgDir].instances++;
+			this.imgLoaded = true
+		} else {
+			this.loadImage(imgDir);
+		}
+
 		this.loadData(dir + name + '.json');
 	}
 
@@ -39,6 +53,12 @@ export class Sprite {
 		this.image.src = imgDir;
 		this.image.onload = () => {
 			this.imgLoaded = true;
+			if (imgDir in Sprite.loadedImages) {
+				this.image = Sprite.loadedImages[imgDir].image
+				Sprite.loadedImages[imgDir].instances++;
+			} else {
+				Sprite.loadedImages[imgDir] = {image: this.image, instances: 0}
+			}
 		};
 	}
 
@@ -51,6 +71,20 @@ export class Sprite {
 			});
 			this.dataLoaded = true
 		} catch (error) {}
+	}
+
+	static clean() {
+		Object.keys(Sprite.loadedImages).forEach(key => {
+			const register = Sprite.loadedImages[key];
+
+			if (register.instances <= 0) {
+				delete Sprite.loadedImages[key];
+			}
+		});
+	}
+
+	clean() {
+		Sprite.loadedImages[this.dir + this.name + '.png'].instances--
 	}
 
 	loadAnimations(animations: Record<string, number[]>)  {
