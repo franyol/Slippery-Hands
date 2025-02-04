@@ -15,7 +15,7 @@ export class Button implements GameObject {
 	sprite: Sprite
 
 	pressed: boolean = false
-	touchIdx: number = -1
+	touchIdx: number | null = null
 	keyState: KeyState = 'iddle'
 
 	position: 'Bottom-Right' | 'Bottom-Left'
@@ -56,7 +56,7 @@ export class Button implements GameObject {
 			(this.position === 'Bottom-Right') ? this.game.uicanvas.height - this.y :
 			this.y
 
-		if (this.touchIdx < 0) {
+		if (this.touchIdx === null) {
 			for (const [id, touch] of Object.entries(touches)) {
 				if (touch.state !== 'down' || touch.isbusy || !this.touched(touch.x, touch.y)) {
 					continue
@@ -69,10 +69,10 @@ export class Button implements GameObject {
 			const touch = input.getTouchState(this.touchIdx)
 			if (touch.state === 'up') {
 				this.keyState = 'up'
-				this.touchIdx = -1
+				this.touchIdx = null
 			} else if (!this.touched(touch.x, touch.y)) {
 				this.keyState = 'iddle'
-				this.touchIdx = -1
+				this.touchIdx = null
 				touch.isbusy = false
 			}
 		}
