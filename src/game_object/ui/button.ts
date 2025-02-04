@@ -59,7 +59,7 @@ export class Button implements GameObject {
 		if (this.touchIdx < 0) {
 			for (const [id, touch] of Object.entries(touches)) {
 				if (touch.state !== 'down' || touch.isbusy || !this.touched(touch.x, touch.y)) {
-					return
+					continue
 				}
 				this.touchIdx = id as unknown as number
 				this.keyState = 'down'
@@ -71,8 +71,7 @@ export class Button implements GameObject {
 				this.keyState = 'up'
 				this.touchIdx = -1
 			} else if (!this.touched(touch.x, touch.y)) {
-				delete touches[this.touchIdx]
-				this.keyState = 'up'
+				this.keyState = 'iddle'
 				this.touchIdx = -1
 				touch.isbusy = false
 			}

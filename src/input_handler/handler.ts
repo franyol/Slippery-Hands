@@ -64,7 +64,7 @@ export class InputHandler {
 
 	private touchStartHandler(event: TouchEvent): void {
 		event.preventDefault()
-		const touches = Array.from(event.touches)
+		const touches = Array.from(event.changedTouches)
 		touches.forEach((touch) => {
 			this.touches[touch.identifier] = {
 				isbusy: false,
@@ -92,6 +92,10 @@ export class InputHandler {
 		event.preventDefault()
 		const touches = Array.from(event.changedTouches)
 		touches.forEach((touch) => {
+			if (!this.touches[touch.identifier].isbusy) {
+				delete this.touches[touch.identifier]
+				return
+			}
 			this.touches[touch.identifier] = {
 				...this.touches[touch.identifier],
 				x: touch.clientX, 

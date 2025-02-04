@@ -59,7 +59,7 @@ export class Joystick implements GameObject {
 		)
 
 		this.joyState = {
-up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
+			up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 			down: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 			right: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 			left: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true)
@@ -71,7 +71,7 @@ up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 		const touches = input.touches
 
 		const debug = Object.entries(touches)
-		.map(([id, touch]) => `ID: ${id}, X: ${touch.x}, Y: ${touch.y}, State: ${touch.state}, Busy: ${touch.isbusy}`)
+		.map(([id, touch]) => `ID: ${id}, State: ${touch.state}, Busy: ${touch.isbusy}, X: ${touch.x}, Y: ${touch.y}`)
 		.join('\n')
 
 		this.game.debugText = 'DEBUG:\n'+debug
@@ -94,13 +94,13 @@ up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 		if (this.touchIdx < 0) {
 			for (const [id, touch] of Object.entries(touches)) {
 				if (touch.state !== 'down' || touch.isbusy || !this.touched(touch.x, touch.y)) {
-					return
+					continue
 				}
 				this.touchIdx = id as unknown as number
 				this.pressed = true
 				touch.isbusy = true
 				this.initial.x = touch.x - this.hitbox.w/2
-				this.initial.y = touch.y - this.hitbox.h/2
+				this.initial.y = touch.y - this.hitbox.h
 				this.current = {...this.initial}
 			}
 		} else {
