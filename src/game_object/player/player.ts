@@ -104,20 +104,12 @@ export class Player implements GameObject {
 			bf.update();
 		});
 
-		const coords = input.getTouchCoords()
 		let up, down, left, right
 
-		if (coords) {
-			up = coords.y < window.innerHeight/4
-			down = coords.y > window.innerHeight*3/4
-			left = coords.x < window.innerWidth/4
-			right = coords.x > window.innerWidth*3/4
-		} else {
-			up = input.getKeyOnce('ArrowUp') === 'down'
-			down = input.getKeyState('ArrowDown') === 'down'
-			left = input.getKeyState('ArrowLeft') === 'down'
-			right = input.getKeyState('ArrowRight') === 'down'
-		}
+		up = input.getBindingState('jump') === 'down'
+		down = input.getKeyState('ArrowDown') === 'down'
+		left = input.getKeyState('ArrowLeft') === 'down'
+		right = input.getKeyState('ArrowRight') === 'down'
 
 		this.physics.xspeed = 0
 		this.running = false

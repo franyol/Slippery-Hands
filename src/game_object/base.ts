@@ -82,7 +82,7 @@ export class Physics {
 	}
 }
 
-export type HitBoxTypes = 'standard' | 'stop'
+export type HitBoxTypes = 'standard' | 'stop' | 'ui'
 
 export class HitBox {
 	parent: Physics

@@ -27,8 +27,10 @@ export class Sprite {
 	animTime: number = 0;
 	animIdx: number = 0;
 	frameTime: number = 0;
+	ui: boolean
 
-	constructor(dir: string, name: string) {
+	constructor(dir: string, name: string, ui: boolean = false) {
+		this.ui = ui
 		this.dir = dir;
 		this.name = name
 		this.image = new Image();
@@ -157,7 +159,9 @@ export class Sprite {
 		flipHorizontal: boolean = false,
 			flipVertical: boolean = false
 	) {
-		const ctx = GameSingleton.getInstance().canvas.getContext('2d');
+		const ctx = this.ui ?
+				GameSingleton.getInstance().uicanvas.getContext('2d')
+			:	GameSingleton.getInstance().canvas.getContext('2d');
 		const frame = this.getCurrentFrameData()?.frame;
 
 		if (frame && this.isReady()) {

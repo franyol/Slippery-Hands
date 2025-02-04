@@ -1,14 +1,21 @@
-import { GameSingleton } from "../game/game";
+import { Game } from "../game/game";
 import { GameObject } from "../game_object/base";
+import { Button } from "../game_object/ui/button";
 
 export type KeyState = 'up' | 'down' | 'iddle';
 
-export class Button {
-	keybinding: string
-	virtual: GameObject
+export type TouchState = {
+	state: KeyState
+	x: number
+	y: number
 }
 
-export class Joystick {
+export type ButtonBinding = {
+	keybinding: string
+	virtual: Button
+}
+
+export type JoystickBinding = {
 	keybindings: string[]
 	virtual: GameObject
 }
@@ -16,26 +23,34 @@ export class Joystick {
 export class InputHandler {
 	private keys: Map<string, KeyState>;
 	private keysReleased: Map<string, boolean>;
-	private touchCoords: { x: number; y: number } | null;
+	touches: Record<number, TouchState> = {}
 	showVirtual: boolean = false
+	bindings: Record<string, ButtonBinding>
+	game: Game
 
-	constructor() {
+	constructor(game: Game) {
+		this.game = game
 		this.keys = new Map<string, KeyState>();
 		this.keysReleased = new Map<string, boolean>();
-		this.touchCoords = null;
+
+		this.bindings = {
+			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 50, 50, 100, 100, 'A')}
+		}
 
 		// Add keyboard event listeners
 		document.addEventListener('keydown', this.keyDownHandler.bind(this));
 		document.addEventListener('keyup', this.keyUpHandler.bind(this));
 
 		// Add touch event listeners
-		document.addEventListener('touchstart', this.touchStartHandler.bind(this));
-		document.addEventListener('touchmove', this.touchMoveHandler.bind(this));
-		document.addEventListener('touchend', this.touchEndHandler.bind(this));
+		document.addEventListener('touchstart', this.touchStartHandler.bind(this), { passive: false });
+		document.addEventListener('touchmove', this.touchMoveHandler.bind(this), { passive: false });
+		document.addEventListener('touchend', this.touchEndHandler.bind(this), { passive: false });
+		document.addEventListener('touchcancel', this.touchEndHandler.bind(this), { passive: false });
 	}
 
 	private keyDownHandler(event: KeyboardEvent): void {
 		this.keys.set(event.key, 'down');
+		this.showVirtual = false
 	}
 
 	private keyUpHandler(event: KeyboardEvent): void {
@@ -44,21 +59,68 @@ export class InputHandler {
 	}
 
 	private touchStartHandler(event: TouchEvent): void {
-		const touch = event.touches[0];
-		this.touchCoords = { x: touch.clientX, y: touch.clientY };
+		event.preventDefault()
+		const touches = Array.from(event.touches)
+		touches.forEach((touch) => {
+			this.touches[touch.identifier] = {
+				x: touch.clientX, 
+				y: touch.clientY, 
+				state: 'down'
+			}
+		})
+		this.showVirtual = true
 	}
 
 	private touchMoveHandler(event: TouchEvent): void {
-		const touch = event.touches[0];
-		this.touchCoords = { x: touch.clientX, y: touch.clientY };
+		event.preventDefault()
+		const touches = Array.from(event.changedTouches)
+		touches.forEach((touch) => {
+			this.touches[touch.identifier] = {
+				x: touch.clientX, 
+				y: touch.clientY, 
+				state: 'down'
+			}
+		})
 	}
 
-	private touchEndHandler(_event: TouchEvent): void {
-		this.touchCoords = null; // Reset coordinates on touch end
+	private touchEndHandler(event: TouchEvent): void {
+		event.preventDefault()
+		const touches = Array.from(event.changedTouches)
+		touches.forEach((touch) => {
+			this.touches[touch.identifier] = {
+				x: touch.clientX, 
+				y: touch.clientY, 
+				state: 'up'
+			}
+		})
+	}
+
+	getTouchState(id: number): TouchState {
+		const response = this.touches[id]
+		if (response.state === 'up') {
+			delete this.touches[id]
+		}
+
+		return response
 	}
 
 	getKeyState(key: string): KeyState {
 		return this.keys.get(key) || 'iddle';
+	}
+
+	getBindingState(key: string): KeyState {
+		if (!(key in this.bindings)) {
+			return
+		}
+		if (this.showVirtual) {
+			const binding = this.bindings[key]
+			const button = binding.virtual
+			return button.keyState
+		} else {
+			const binding = this.bindings[key]
+			return this.getKeyState(binding.keybinding)
+		}
+		return 'iddle'
 	}
 
 	getKeyOnce(key: string): KeyState {
@@ -74,9 +136,5 @@ export class InputHandler {
 
 	setKeyState(key: string, state: KeyState) {
 		this.keys.set(key, state)
-	}
-
-	getTouchCoords(): { x: number; y: number } | null {
-		return this.touchCoords;
 	}
 }

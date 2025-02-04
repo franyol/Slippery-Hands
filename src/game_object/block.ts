@@ -34,22 +34,12 @@ export class Block implements GameObject {
 
 			this.physics.recordHistory()
 
-			const coords = input.getTouchCoords()
 			let up, down, left, right
 
 			up = input.getKeyState('ArrowUp') === 'down'
-			if (coords) {
-				console.log(coords)
-				up = coords.y < this.game.canvas.height/4
-				down = coords.y > this.game.canvas.height*3/4
-				left = coords.x < this.game.canvas.width/4
-				right = coords.x > this.game.canvas.width*3/4
-			} else {
-				up = input.getKeyState('ArrowUp') === 'down'
-				down = input.getKeyState('ArrowDown') === 'down'
-				left = input.getKeyState('ArrowLeft') === 'down'
-				right = input.getKeyState('ArrowRight') === 'down'
-			}
+			down = input.getKeyState('ArrowDown') === 'down'
+			left = input.getKeyState('ArrowLeft') === 'down'
+			right = input.getKeyState('ArrowRight') === 'down'
 			
 
 			this.physics.yspeed = (up) ? -25 : (down) ? 25 : 0

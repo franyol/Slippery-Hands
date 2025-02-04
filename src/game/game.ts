@@ -6,7 +6,7 @@ export class Game {
 	uicanvas: HTMLCanvasElement
 	dt: number = 0;
 	fsm: FSM = new FSM
-	inputHandler: InputHandler = new InputHandler
+	inputHandler: InputHandler
 	width: number = 4000
 	height: number = 4000
 	camx: number = 0
@@ -24,18 +24,31 @@ export class Game {
 	constructor() {
 		this.canvas = document.getElementById('game-screen') as HTMLCanvasElement;
 		this.uicanvas = document.getElementById('ui-layer') as HTMLCanvasElement
+		this.inputHandler = new InputHandler(this)
 	}
 
 	update() {
 		this.canvas.width = this.width
 		this.canvas.height = this.height
+		this.uicanvas.width = window.innerWidth
+		this.uicanvas.height = window.innerHeight
 		this.fsm.update()
+
+		// UI
+		if (this.inputHandler.showVirtual) {
+			Object.values(this.inputHandler.bindings).forEach((binding) => {
+				binding.virtual.update()
+			})
+		}
 	}
 
 
 	render() {
 		const ctx = this.canvas.getContext('2d');
+		const ctxui = this.uicanvas.getContext('2d');
 		ctx.imageSmoothingEnabled = false;
+		ctxui.imageSmoothingEnabled = false;
+		ctxui.clearRect(0, 0, this.uicanvas.width, this.uicanvas.height);
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		ctx.save();
@@ -65,6 +78,13 @@ export class Game {
 		this.canvas.style.position = 'absolute';
 		this.canvas.style.left = `${(window.innerWidth - newWidth) / 2}px`;
 		this.canvas.style.top = `${(window.innerHeight - newHeight) / 2}px`;
+
+		// UI
+		if (this.inputHandler.showVirtual) {
+			Object.values(this.inputHandler.bindings).forEach((binding) => {
+				binding.virtual.render()
+			})
+		}
 	}
 }
 
