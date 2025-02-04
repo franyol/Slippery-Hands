@@ -34,7 +34,7 @@ export class InputHandler {
 		this.keysReleased = new Map<string, boolean>();
 
 		this.bindings = {
-			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 50, 50, 100, 100, 'A')}
+			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 100, 100, 50, 50, 'A')}
 		}
 
 		// Add keyboard event listeners
@@ -120,7 +120,6 @@ export class InputHandler {
 			const binding = this.bindings[key]
 			return this.getKeyState(binding.keybinding)
 		}
-		return 'iddle'
 	}
 
 	getKeyOnce(key: string): KeyState {

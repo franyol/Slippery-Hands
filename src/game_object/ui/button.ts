@@ -59,8 +59,8 @@ export class Button implements GameObject {
 	}
 
 	touched(x: number, y: number) {
-		const xoverlap = x > this.hitbox.x && x < this.hitbox.w + this.hitbox.w
-		const yoverlap = y > this.hitbox.y && x < this.hitbox.y + this.hitbox.h
+		const xoverlap = x >= this.hitbox.x && x <= this.hitbox.x + this.hitbox.w;
+		const yoverlap = y >= this.hitbox.y && y <= this.hitbox.y + this.hitbox.h;
 
 		return xoverlap && yoverlap
 	}
