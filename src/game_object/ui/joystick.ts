@@ -100,7 +100,7 @@ export class Joystick implements GameObject {
 				this.pressed = true
 				touch.isbusy = true
 				this.initial.x = touch.x - this.hitbox.w/2
-				this.initial.y = touch.y - this.hitbox.h
+				this.initial.y = touch.y - this.hitbox.h/2
 				this.current = {...this.initial}
 			}
 		} else {
