@@ -14,6 +14,7 @@ export class Game {
 	_camsize: number = 50
 	camw: number = 16 * this._camsize
 	camh: number = 9 * this._camsize
+	debugText: string = ''
 
 	set camsize(value: number) {
 		this._camsize = value
@@ -71,9 +72,17 @@ export class Game {
 
 		this.scale(this.canvas, 
 				   window.innerWidth, window.innerHeight,
-				   this.camw, this.camh)
+				   this.camw, this.camh);
 
 		// UI
+		if (this.debugText !== '') {
+		    ctxui.font = '16px Arial' // Ensure a readable font
+		    ctxui.fillStyle = 'red'  // Set text color
+			const lines = this.debugText.split('\n') // Split text into lines
+			lines.forEach((line, index) => {
+				ctxui.fillText(line, 10, 30 + index * 20) // Adjust Y position per line
+			})
+		}
 		if (this.inputHandler.showVirtual) {
 			Object.values(this.inputHandler.bindings).forEach((binding) => {
 				binding.virtual.render()

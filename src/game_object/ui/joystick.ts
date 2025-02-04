@@ -69,7 +69,12 @@ up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 	update() {
 		const input = this.game.inputHandler
 		const touches = input.touches
-		console.log(touches)
+
+		const debug = Object.entries(touches)
+		.map(([id, touch]) => `ID: ${id}, X: ${touch.x}, Y: ${touch.y}, State: ${touch.state}, Busy: ${touch.isbusy}`)
+		.join('\n')
+
+		this.game.debugText = 'DEBUG:\n'+debug
 
 		this.physics.x =
 			(this.position === 'Bottom-Left') ? 0 + this.x :
