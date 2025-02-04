@@ -1,6 +1,7 @@
 import { Game, GameSingleton } from "../../game/game";
 import { Buffered } from "../../input_handler/buffered";
 import { Cooldown } from "../../input_handler/cooldown";
+import { Once } from "../../input_handler/once";
 import { Sprite } from "../../visual/sprite";
 import { GameObject, HitBox, Physics } from "../base";
 import { CameraFollowSingleton } from "../environments/cam_follow";
@@ -39,6 +40,7 @@ export class Player implements GameObject {
 	// Input
 	cooldowns: Record<string, Cooldown>
 	buffers: Record<string, Buffered>
+	pressOnce: Record<string, Once>
 
 	constructor (x: number, y: number) {
 		this.game = GameSingleton.getInstance()
@@ -86,6 +88,9 @@ export class Player implements GameObject {
 			'jump': new Buffered(100),
 			'coyotetime': new Buffered(50),
 		}
+		this.pressOnce = {
+			'jump': new Once()
+		}
 
 		InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
@@ -106,7 +111,7 @@ export class Player implements GameObject {
 
 		let up, down, left, right
 
-		up = input.getBindingState('jump') === 'down'
+		up = this.pressOnce['jump'].request(input.getBindingState('jump') === 'down')
 		down = input.getKeyState('ArrowDown') === 'down'
 		left = input.getKeyState('ArrowLeft') === 'down'
 		right = input.getKeyState('ArrowRight') === 'down'
