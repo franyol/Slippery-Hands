@@ -31,12 +31,12 @@ export class InputHandler {
 		this.keysReleased = new Map<string, boolean>();
 
 		this.joysticks = {
-			'left': new Joystick(game, 150, 200, 100, 100, 'Bottom-Left')
+			'left': new Joystick(game, 110, 170, 100, 100, 'Bottom-Left')
 		}
 
 		this.bindings = {
-			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 200, 300, 70, 70, 'A', 'Bottom-Right')},
-			'roll': {keybinding: 'ArrowDown', virtual: new Button(game, 300, 200, 70, 70, 'B', 'Bottom-Right')},
+			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 170, 200, 70, 70, 'A', 'Bottom-Right')},
+			'roll': {keybinding: 'ArrowDown', virtual: new Button(game, 250, 120, 70, 70, 'B', 'Bottom-Right')},
 			'left': {keybinding: 'ArrowLeft', virtual: this.joysticks['left'].joyState.left},
 			'right': {keybinding: 'ArrowRight', virtual: this.joysticks['left'].joyState.right},
 		}
@@ -84,7 +84,6 @@ export class InputHandler {
 				...this.touches[touch.identifier],
 				x: touch.clientX, 
 				y: touch.clientY, 
-				state: 'down'
 			}
 		})
 	}

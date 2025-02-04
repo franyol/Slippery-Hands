@@ -36,7 +36,7 @@ export class Joystick implements GameObject {
 	current: {x: number, y: number} = {x: 0, y: 0}
 	deadzone: number
 
-	constructor(game: Game, x: number, y: number, w: number, h: number, position: 'Bottom-Right' | 'Bottom-Left', deadzone: number = 10) {
+	constructor(game: Game, x: number, y: number, w: number, h: number, position: 'Bottom-Right' | 'Bottom-Left', deadzone: number = 20) {
 		this.deadzone = deadzone
 		this.game = game
 		this.position = position
@@ -69,6 +69,7 @@ up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 	update() {
 		const input = this.game.inputHandler
 		const touches = input.touches
+		console.log(touches)
 
 		this.physics.x =
 			(this.position === 'Bottom-Left') ? 0 + this.x :
@@ -106,7 +107,7 @@ up: new Button(game, 0, 0, 0, 0, 'A', 'Bottom-Right', true),
 				Object.values(this.joyState).forEach((button) => {
 					button.keyState = 'up'
 				})
-			} else if (!this.touched(touch.x, touch.y)) {
+			} else {
 				this.current.x = touch.x - this.hitbox.w/2
 				this.current.y = touch.y - this.hitbox.h/2
 				
