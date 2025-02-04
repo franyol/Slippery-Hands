@@ -1,7 +1,7 @@
 import { GameSingleton } from "../game/game";
 import { GameObject } from "../game_object/base";
 
-type KeyState = 'up' | 'down' | 'iddle';
+export type KeyState = 'up' | 'down' | 'iddle';
 
 export class Button {
 	keybinding: string

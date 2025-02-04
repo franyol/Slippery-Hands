@@ -1,6 +1,8 @@
 import { Game, GameSingleton } from "../../game/game";
+import { Buffered } from "../../input_handler/buffered";
+import { Cooldown } from "../../input_handler/cooldown";
 import { Sprite } from "../../visual/sprite";
-import { GameObject, HitBox, Physics, Cooldown } from "../base";
+import { GameObject, HitBox, Physics } from "../base";
 import { CameraFollowSingleton } from "../environments/cam_follow";
 import { CollidedSingleton } from "../environments/collisions";
 import { GravitySingleton } from "../environments/gravity";
@@ -27,12 +29,16 @@ export class Player implements GameObject {
 	cantmove: boolean = false
 	onfloor: boolean = false
 
+	jumpcount: number = 0
+
 	runningspeed: number = 40
 	rollspeed: number = 60
 	jumpingForce: number = 210
 	iddleTime: number = 5000
 
+	// Input
 	cooldowns: Record<string, Cooldown>
+	buffers: Record<string, Buffered>
 
 	constructor (x: number, y: number) {
 		this.game = GameSingleton.getInstance()
@@ -76,6 +82,10 @@ export class Player implements GameObject {
 				this.headbumping = false
 			}, 1200)
 		}
+		this.buffers = {
+			'jump': new Buffered(100),
+			'coyotetime': new Buffered(50),
+		}
 
 		InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
@@ -89,6 +99,9 @@ export class Player implements GameObject {
 		this.physics.recordHistory()
 		Object.values(this.cooldowns).forEach((cd) => {
 			cd.update();
+		});
+		Object.values(this.buffers).forEach((bf) => {
+			bf.update();
 		});
 
 		const coords = input.getTouchCoords()
@@ -133,22 +146,25 @@ export class Player implements GameObject {
 			}
 		})
 
-		if (up && !this.cantmove && !this.headbumping && this.onfloor) {
-			this.physics.yspeed -= this.jumpingForce
+		if (this.buffers['jump'].request(up, !this.cantmove && !this.headbumping && this.jumpcount < 1 && this.buffers['coyotetime'].retain(this.onfloor))) {
+			this.physics.yspeed = -this.jumpingForce
+			this.jumpcount++
 			this.jumping = true
 			this.rolling = false
 			this.hitbox._y = 0
 			this.hitbox.h = 64
 		} else if (this.onfloor) {
 			this.jumping = false
-		} else {
-			this.jumping = true
+			this.jumpcount = 0
 		}
+
 		if (this.headbumping) {
 			this.cantmove = true
 			this.sprite.setCurAnimation('bumppain')
+			this.hitbox._y = 32
+			this.hitbox.h = 32
 		}
-		this.falling = this.jumping && this.physics.yspeed > 0
+		this.falling = this.physics.yspeed > 0 && !this.onfloor
 
 		this.handleAnimations()
 
@@ -157,17 +173,26 @@ export class Player implements GameObject {
 
 	handleAnimations() {
 		// Trigger animations by condition
-		if (!this.running && !this.jumping && !this.rolling) {
+		if (!this.running && !this.jumping && !this.rolling && !this.falling) {
 			if (this.sprite.animTime > this.iddleTime) {
 				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
 			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain', 'roll'].includes(this.sprite.curAnimation)) {
 				this.sprite.setCurAnimation('prepare')	
 			}
-		} else if (this.running && !this.jumping && !this.rolling &&
+		} else if (this.running && !this.jumping && !this.rolling && !this.falling &&
 			!['run', 'torun'].includes(this.sprite.curAnimation)) {
 			this.sprite.setCurAnimation('torun')
-		} else if (this.jumping) {
-			if (this.falling && !this.rolling) {
+		} else if (this.jumping && !this.falling) {
+			if (!this.rolling) {
+				if (!this.running) {
+					if (!['stilljump', 'tostilljump'].includes(this.sprite.curAnimation))
+						this.sprite.setCurAnimation('tostilljump')
+				} else {
+					if (!['runjump', 'torunjump'].includes(this.sprite.curAnimation))
+						this.sprite.setCurAnimation('torunjump')
+				}
+			}
+		} else if (this.falling && !this.rolling) {
 				if (this.headbumping) {
 					if (!['bumpfalling'].includes(this.sprite.curAnimation))
 					this.sprite.setCurAnimation('bumpfalling')
@@ -178,16 +203,7 @@ export class Player implements GameObject {
 					if (!['runfalling'].includes(this.sprite.curAnimation))
 					this.sprite.setCurAnimation('runfalling')
 				}
-			} else if (!this.rolling) {
-				if (!this.running) {
-					if (!['stilljump', 'tostilljump'].includes(this.sprite.curAnimation))
-					this.sprite.setCurAnimation('tostilljump')
-				} else {
-					if (!['runjump', 'torunjump'].includes(this.sprite.curAnimation))
-					this.sprite.setCurAnimation('torunjump')
-				}
-			}
-		}
+			} 
 
 		// Trigger animations automatically
 		if (this.sprite.update()) {
@@ -225,6 +241,8 @@ export class Player implements GameObject {
 				case 'bumppain':
 					this.headbumping = false
 					this.cantmove = false
+					this.hitbox._y = 0
+					this.hitbox.h = 64
 					this.sprite.setCurAnimation('stand')
 					break;
 			}
