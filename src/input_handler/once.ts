@@ -6,9 +6,10 @@ export class Once {
 		if (!pressed) {
 			this.enabled = true
 			return false
-		} else {
+		} else if (this.enabled && pressed) {
 			this.enabled = false
-			return this.enabled && pressed
+			return true
 		}
+		return false
 	}
 }
