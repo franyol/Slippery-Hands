@@ -112,9 +112,9 @@ export class Player implements GameObject {
 		let up, down, left, right
 
 		up = this.pressOnce['jump'].request(input.getBindingState('jump') === 'down')
-		down = input.getKeyState('ArrowDown') === 'down'
-		left = input.getKeyState('ArrowLeft') === 'down'
-		right = input.getKeyState('ArrowRight') === 'down'
+		down = input.getBindingState('roll') === 'down'
+		left = input.getBindingState('left') === 'down'
+		right = input.getBindingState('right') === 'down'
 
 		this.physics.xspeed = 0
 		this.running = false

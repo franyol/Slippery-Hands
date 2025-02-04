@@ -39,6 +39,9 @@ export class Game {
 			Object.values(this.inputHandler.bindings).forEach((binding) => {
 				binding.virtual.update()
 			})
+			Object.values(this.inputHandler.joysticks).forEach((joy) => {
+				joy.update()
+			})
 		}
 	}
 
@@ -66,25 +69,34 @@ export class Game {
 
 		ctx.restore();
 
-		const scaleX = window.innerWidth / this.camw;
-		const scaleY = window.innerHeight / this.camh;
-		const scale = Math.min(scaleX, scaleY);
-
-		const newWidth = this.camw * scale;
-		const newHeight = this.camh * scale;
-
-		this.canvas.style.width = `${newWidth}px`;
-		this.canvas.style.height = `${newHeight}px`;
-		this.canvas.style.position = 'absolute';
-		this.canvas.style.left = `${(window.innerWidth - newWidth) / 2}px`;
-		this.canvas.style.top = `${(window.innerHeight - newHeight) / 2}px`;
+		this.scale(this.canvas, 
+				   window.innerWidth, window.innerHeight,
+				   this.camw, this.camh)
 
 		// UI
 		if (this.inputHandler.showVirtual) {
 			Object.values(this.inputHandler.bindings).forEach((binding) => {
 				binding.virtual.render()
 			})
+			Object.values(this.inputHandler.joysticks).forEach((joy) => {
+				joy.render()
+			})
 		}
+	}
+
+	scale(canvas: HTMLCanvasElement, targetW: number, targetH: number, sourceW: number, sourceH: number) {
+		const scaleX = targetW / sourceW;
+		const scaleY = targetH / sourceH;
+		const scale = Math.min(scaleX, scaleY);
+
+		const newWidth = sourceW * scale;
+		const newHeight = sourceH * scale;
+
+		canvas.style.width = `${newWidth}px`;
+		canvas.style.height = `${newHeight}px`;
+		canvas.style.position = 'absolute';
+		canvas.style.left = `${(targetW - newWidth) / 2}px`;
+		canvas.style.top = `${(targetH - newHeight) / 2}px`;
 	}
 }
 

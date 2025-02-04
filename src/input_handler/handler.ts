@@ -1,10 +1,11 @@
 import { Game } from "../game/game";
-import { GameObject } from "../game_object/base";
 import { Button } from "../game_object/ui/button";
+import { Joystick } from "../game_object/ui/joystick";
 
 export type KeyState = 'up' | 'down' | 'iddle';
 
 export type TouchState = {
+	isbusy: boolean
 	state: KeyState
 	x: number
 	y: number
@@ -15,17 +16,13 @@ export type ButtonBinding = {
 	virtual: Button
 }
 
-export type JoystickBinding = {
-	keybindings: string[]
-	virtual: GameObject
-}
-
 export class InputHandler {
 	private keys: Map<string, KeyState>;
 	private keysReleased: Map<string, boolean>;
 	touches: Record<number, TouchState> = {}
 	showVirtual: boolean = false
 	bindings: Record<string, ButtonBinding>
+	joysticks: Record<string, Joystick>
 	game: Game
 
 	constructor(game: Game) {
@@ -33,8 +30,15 @@ export class InputHandler {
 		this.keys = new Map<string, KeyState>();
 		this.keysReleased = new Map<string, boolean>();
 
+		this.joysticks = {
+			'left': new Joystick(game, 150, 200, 100, 100, 'Bottom-Left')
+		}
+
 		this.bindings = {
-			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 100, 100, 50, 50, 'A')}
+			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 200, 300, 70, 70, 'A', 'Bottom-Right')},
+			'roll': {keybinding: 'ArrowDown', virtual: new Button(game, 300, 200, 70, 70, 'B', 'Bottom-Right')},
+			'left': {keybinding: 'ArrowLeft', virtual: this.joysticks['left'].joyState.left},
+			'right': {keybinding: 'ArrowRight', virtual: this.joysticks['left'].joyState.right},
 		}
 
 		// Add keyboard event listeners
@@ -63,6 +67,7 @@ export class InputHandler {
 		const touches = Array.from(event.touches)
 		touches.forEach((touch) => {
 			this.touches[touch.identifier] = {
+				isbusy: false,
 				x: touch.clientX, 
 				y: touch.clientY, 
 				state: 'down'
@@ -76,6 +81,7 @@ export class InputHandler {
 		const touches = Array.from(event.changedTouches)
 		touches.forEach((touch) => {
 			this.touches[touch.identifier] = {
+				...this.touches[touch.identifier],
 				x: touch.clientX, 
 				y: touch.clientY, 
 				state: 'down'
@@ -88,6 +94,7 @@ export class InputHandler {
 		const touches = Array.from(event.changedTouches)
 		touches.forEach((touch) => {
 			this.touches[touch.identifier] = {
+				...this.touches[touch.identifier],
 				x: touch.clientX, 
 				y: touch.clientY, 
 				state: 'up'
