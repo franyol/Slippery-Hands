@@ -34,11 +34,11 @@ export class Player implements GameObject {
 
 	jumpcount: number = 0
 
-	runningspeed: number = 55
-	rollspeed: number = 80
+	runningspeed: number = 50
+	rollspeed: number = 70
 	jumpingForce: number = 210
 	iddleTime: number = 5000
-	walljumpimpulse: number = 160
+	walljumpimpulse: number = 180
 
 	// Input
 	cooldowns: Record<string, Cooldown>
