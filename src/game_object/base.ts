@@ -59,7 +59,7 @@ export class Physics {
 			}
 		}
 		if (this.yfriction !== 0) {
-			const f = this.xfriction * dt/100
+			const f = this.yfriction * dt/100
 			if (Math.abs(this.yspeed) < f) {
 				this.yspeed = 0
 			} else {

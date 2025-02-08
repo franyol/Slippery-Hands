@@ -38,7 +38,7 @@ export class Player implements GameObject {
 	rollspeed: number = 70
 	jumpingForce: number = 210
 	iddleTime: number = 5000
-	walljumpimpulse: number = 180
+	walljumpimpulse: number = 210
 
 	// Input
 	cooldowns: Record<string, Cooldown>
@@ -88,7 +88,13 @@ export class Player implements GameObject {
 				this.hitbox._y = 32
 				this.hitbox.h = 32
 				this.headbumping = false
-			}, 1200)
+			} , 1200),
+			'stopwalljump': new Cooldown(() => {
+				this.walljumping = false
+			}, 100),
+			'regainwalljumpctl': new Cooldown(() => {
+				this.walljumping = false
+			}, 300)
 		}
 		this.buffers = {
 			'jump': new Buffered(100),
@@ -123,7 +129,8 @@ export class Player implements GameObject {
 		right = input.getBindingState('right') === 'down'
 
 		// Force jump direction
-		if (this.walljumping && !this.falling) {
+		this.cooldowns['regainwalljumpctl'].request()
+		if (this.walljumping) {
 			if (this.headingLeft) {
 				left = true
 				right = false
@@ -158,11 +165,13 @@ export class Player implements GameObject {
 				this.onfloor = true
 			} else if (collider.y + collider.h <= this.hitbox.y && collider.type === 'stop' && !this.rolling) {
 				this.headbumping = true
-			} else if (collider.x >= this.hitbox.x + this.hitbox.w && collider.type === 'stop') {
+			} else if (collider.x >= this.hitbox.x + this.hitbox.w && collider.type === 'stop' && !this.rolling) {
 				this.wallsliding = true
+				this.cooldowns['stopwalljump'].request()
 				this.headingLeft = true
-			} else if (collider.x + collider.w <= this.hitbox.x && collider.type === 'stop') {
+			} else if (collider.x + collider.w <= this.hitbox.x && collider.type === 'stop' && !this.rolling) {
 				this.wallsliding = true
+				this.cooldowns['stopwalljump'].request()
 				this.headingLeft = false
 			}
 		})
@@ -176,6 +185,7 @@ export class Player implements GameObject {
 		if (this.buffers['jump'].request(up, !this.cantmove && (this.wallsliding || !this.headbumping && this.jumpcount < 1 && this.buffers['coyotetime'].retain(this.onfloor)))) {
 			if (this.wallsliding) {
 				this.walljumping = true
+				this.cooldowns['regainwalljumpctl'].current = 0
 			}
 			this.physics.yspeed = this.walljumping ? -this.walljumpimpulse : -this.jumpingForce
 			this.jumpcount++
