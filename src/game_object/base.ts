@@ -32,6 +32,8 @@ export class Physics {
 			this._x.push(0)
 			this._y.push(0)
 		}
+		this.xfriction = 0
+		this.yfriction = 0
 	}
 
 	recordHistory() {
@@ -47,6 +49,23 @@ export class Physics {
 		const dt = GameSingleton.getInstance().dt
 		this.x += this.xspeed * dt/100
 		this.y += this.yspeed * dt/100
+
+		if (this.xfriction !== 0) {
+			const f = this.xfriction * dt/100
+			if (Math.abs(this.xspeed) < f) {
+				this.xspeed = 0
+			} else {
+				this.xspeed += ((this.xspeed > 0) ? -f : f)
+			}
+		}
+		if (this.yfriction !== 0) {
+			const f = this.xfriction * dt/100
+			if (Math.abs(this.yspeed) < f) {
+				this.yspeed = 0
+			} else {
+				this.yspeed += ((this.yspeed > 0) ? -f : f)
+			}
+		}
 	}
 
 	get x(): number {

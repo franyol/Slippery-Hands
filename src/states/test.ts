@@ -9,10 +9,6 @@ import { State } from "./fsm";
 
 export class TestState extends State {
 	on_enter() {
-		const game = GameSingleton.getInstance(); 
-		const width = game.width
-		const height = game.height
-
 		this.environments.push(InBoundsSingleton.getInstance())
 		this.environments.push(CollidedSingleton.getInstance())
 		this.environments.push(GravitySingleton.getInstance())
@@ -24,7 +20,8 @@ export class TestState extends State {
 		this.register(new Block(0, 1800, 800, 100, false, 'blue'));
 
 		// First obstacle (must jump)
-		this.register(new Block(200, 1560, 80, 200, false, 'blue'));
+		this.register(new Block(200, 1060, 80, 700, false, 'blue'));
+		this.register(new Block(400, 760, 80, 700, false, 'blue'));
 
 		// Small gap for rolling
 		this.register(new Block(400, 1600, 200, 100, false, 'blue'));

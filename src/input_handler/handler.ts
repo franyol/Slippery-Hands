@@ -35,10 +35,10 @@ export class InputHandler {
 		}
 
 		this.bindings = {
-			'jump': {keybinding: 'ArrowUp', virtual: new Button(game, 170, 200, 70, 70, 'A', 'Bottom-Right')},
-			'roll': {keybinding: 'ArrowDown', virtual: new Button(game, 250, 120, 70, 70, 'B', 'Bottom-Right')},
-			'left': {keybinding: 'ArrowLeft', virtual: this.joysticks['left'].joyState.left},
-			'right': {keybinding: 'ArrowRight', virtual: this.joysticks['left'].joyState.right},
+			'jump': {keybinding: ' ', virtual: new Button(game, 170, 200, 70, 70, 'A', 'Bottom-Right')},
+			'roll': {keybinding: 's', virtual: new Button(game, 250, 120, 70, 70, 'B', 'Bottom-Right')},
+			'left': {keybinding: 'a', virtual: this.joysticks['left'].joyState.left},
+			'right': {keybinding: 'd', virtual: this.joysticks['left'].joyState.right},
 		}
 
 		// Add keyboard event listeners

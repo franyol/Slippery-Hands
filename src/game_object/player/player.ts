@@ -29,13 +29,16 @@ export class Player implements GameObject {
 	running: boolean = false
 	cantmove: boolean = false
 	onfloor: boolean = false
+	wallsliding: boolean = false
+	walljumping: boolean = false
 
 	jumpcount: number = 0
 
-	runningspeed: number = 40
-	rollspeed: number = 60
+	runningspeed: number = 55
+	rollspeed: number = 80
 	jumpingForce: number = 210
 	iddleTime: number = 5000
+	walljumpimpulse: number = 160
 
 	// Input
 	cooldowns: Record<string, Cooldown>
@@ -48,14 +51,17 @@ export class Player implements GameObject {
 		this.physics = new Physics(2)
 		this.physics.x = x
 		this.physics.y = y
+		this.physics.xfriction = 700
+		this.physics.yfriction = 0
 		this.printbox = new HitBox(
 			this.physics, 0, 0, 64, 64, 'standard', 0
 		)
 		this.hitbox = new HitBox(
-			this.physics, 7, 0, 50, 64, 'standard', 0
+			this.physics, 13, 0, 38, 64, 'standard', 0
 		)
 		this.sprite.loadAnimations({
 			'stand': [0, 1],
+			'wallsliding': [32],
 			'toiddle': [2],
 			'fromiddle': [2],
 			'iddle': [3, 4, 3, 4, 3, 4, 3],
@@ -116,16 +122,26 @@ export class Player implements GameObject {
 		left = input.getBindingState('left') === 'down'
 		right = input.getBindingState('right') === 'down'
 
-		this.physics.xspeed = 0
+		// Force jump direction
+		if (this.walljumping && !this.falling) {
+			if (this.headingLeft) {
+				left = true
+				right = false
+			} else {
+				right = true
+				left = false
+			}
+		}
+
 		this.running = false
 		if (this.rolling && !this.cantmove) {
 			this.physics.xspeed = (this.headingLeft) ? -this.rollspeed : this.rollspeed
 		} else if (left && !this.cantmove) {
-			this.physics.xspeed -= this.runningspeed
+			this.physics.xspeed = -this.runningspeed
 			this.headingLeft = true
 			this.running = true
 		} else if (right && !this.cantmove) {
-			this.physics.xspeed += this.runningspeed
+			this.physics.xspeed = this.runningspeed
 			this.headingLeft = false
 			this.running = true
 		}
@@ -134,17 +150,34 @@ export class Player implements GameObject {
 			this.cooldowns['rolling'].request()
 		}
 
+		const prevHeading = this.headingLeft
 		this.onfloor = false
+		this.wallsliding = false
 		this.hitbox.colliders.map((collider) => {
 			if (collider.y >= this.physics.y + this.hitbox.h) {
 				this.onfloor = true
 			} else if (collider.y + collider.h <= this.hitbox.y && collider.type === 'stop' && !this.rolling) {
 				this.headbumping = true
+			} else if (collider.x >= this.hitbox.x + this.hitbox.w && collider.type === 'stop') {
+				this.wallsliding = true
+				this.headingLeft = true
+			} else if (collider.x + collider.w <= this.hitbox.x && collider.type === 'stop') {
+				this.wallsliding = true
+				this.headingLeft = false
 			}
 		})
+		this.physics.yfriction = (this.wallsliding && this.falling) ? 200 : 0
 
-		if (this.buffers['jump'].request(up, !this.cantmove && !this.headbumping && this.jumpcount < 1 && this.buffers['coyotetime'].retain(this.onfloor))) {
-			this.physics.yspeed = -this.jumpingForce
+		if (this.onfloor || !this.falling || this.rolling) {
+			this.wallsliding = false
+			this.headingLeft = prevHeading
+		}
+
+		if (this.buffers['jump'].request(up, !this.cantmove && (this.wallsliding || !this.headbumping && this.jumpcount < 1 && this.buffers['coyotetime'].retain(this.onfloor)))) {
+			if (this.wallsliding) {
+				this.walljumping = true
+			}
+			this.physics.yspeed = this.walljumping ? -this.walljumpimpulse : -this.jumpingForce
 			this.jumpcount++
 			this.jumping = true
 			this.rolling = false
@@ -153,6 +186,7 @@ export class Player implements GameObject {
 		} else if (this.onfloor) {
 			this.jumping = false
 			this.jumpcount = 0
+			this.walljumping = false
 		}
 
 		if (this.headbumping) {
@@ -161,6 +195,7 @@ export class Player implements GameObject {
 			this.hitbox._y = 32
 			this.hitbox.h = 32
 		}
+
 		this.falling = this.physics.yspeed > 0 && !this.onfloor
 
 		this.handleAnimations()
@@ -170,7 +205,10 @@ export class Player implements GameObject {
 
 	handleAnimations() {
 		// Trigger animations by condition
-		if (!this.running && !this.jumping && !this.rolling && !this.falling) {
+		if (this.wallsliding && !this.rolling) {
+			if (!['wallsliding'].includes(this.sprite.curAnimation))
+				this.sprite.setCurAnimation('wallsliding')
+		} else if (!this.running && !this.jumping && !this.rolling && !this.falling) {
 			if (this.sprite.animTime > this.iddleTime) {
 				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
 			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain', 'roll'].includes(this.sprite.curAnimation)) {
