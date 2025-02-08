@@ -24,7 +24,7 @@ export class Joystick implements GameObject {
 	spritemove: Sprite
 
 	pressed: boolean = false
-	touchIdx: number = -1
+	touchIdx: number | null = null
 	joyState: JoyState
 
 	position: 'Bottom-Right' | 'Bottom-Left'
@@ -91,7 +91,7 @@ export class Joystick implements GameObject {
 			this.current = {...this.initial}
 		}		
 
-		if (this.touchIdx < 0) {
+		if (this.touchIdx === null) {
 			for (const [id, touch] of Object.entries(touches)) {
 				if (touch.state !== 'down' || touch.isbusy || !this.touched(touch.x, touch.y)) {
 					continue
@@ -108,7 +108,7 @@ export class Joystick implements GameObject {
 			if (touch.state === 'up') {
 				this.pressed = false
 				touch.isbusy = false
-				this.touchIdx = -1
+				this.touchIdx = null
 				Object.values(this.joyState).forEach((button) => {
 					button.keyState = 'up'
 				})
