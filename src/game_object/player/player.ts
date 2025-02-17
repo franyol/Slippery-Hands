@@ -18,6 +18,7 @@ export class Player implements GameObject {
 
 	physics: Physics
 	hitbox: HitBox
+	standbox: HitBox
 	printbox: HitBox
 	sprite: Sprite
 
@@ -31,10 +32,12 @@ export class Player implements GameObject {
 	onfloor: boolean = false
 	wallsliding: boolean = false
 	walljumping: boolean = false
+	duck: boolean = false
 
 	jumpcount: number = 0
 
 	runningspeed: number = 50
+	duckspeed: number = 20
 	rollspeed: number = 70
 	jumpingForce: number = 210
 	iddleTime: number = 5000
@@ -59,8 +62,14 @@ export class Player implements GameObject {
 		this.hitbox = new HitBox(
 			this.physics, 13, 0, 38, 64, 'standard', 0
 		)
+		this.standbox = new HitBox(
+			this.physics, 13, 0, 38, 64, 'virtual', 0
+		)
 		this.sprite.loadAnimations({
 			'stand': [0, 1],
+			'duck': [33],
+			'duckwalk': [34, 35, 36, 35, 34, 37, 38, 37],
+			'fromducktostand': [33],
 			'wallsliding': [32],
 			'toiddle': [2],
 			'fromiddle': [2],
@@ -106,6 +115,7 @@ export class Player implements GameObject {
 
 		InBoundsSingleton.getInstance().register(this.hitbox)
 		CollidedSingleton.getInstance().register(this.hitbox)
+		CollidedSingleton.getInstance().register(this.standbox)
 		GravitySingleton.getInstance().register(this.hitbox)
 		CameraFollowSingleton.getInstance().register(this.printbox)
 	}
@@ -144,17 +154,37 @@ export class Player implements GameObject {
 		if (this.rolling && !this.cantmove) {
 			this.physics.xspeed = (this.headingLeft) ? -this.rollspeed : this.rollspeed
 		} else if (left && !this.cantmove) {
-			this.physics.xspeed = -this.runningspeed
+			this.physics.xspeed = this.duck ? -this.duckspeed : -this.runningspeed
 			this.headingLeft = true
 			this.running = true
 		} else if (right && !this.cantmove) {
-			this.physics.xspeed = this.runningspeed
+			this.physics.xspeed = this.duck ? this.duckspeed : this.runningspeed
 			this.headingLeft = false
 			this.running = true
 		}
 
-		if (down && this.running && !this.cantmove && !this.headbumping && !(this.jumping && !this.falling)) {
+		if (down && this.running && !this.cantmove && !this.headbumping && !this.duck && !(this.jumping && !this.falling)) {
 			this.cooldowns['rolling'].request()
+		}
+
+		const wasducked = this.duck
+	 	if (down && !this.rolling && this.onfloor && !this.headbumping && !(!wasducked && this.running)) {
+			this.duck = true
+			this.hitbox._y = 32
+			this.hitbox.h = 32
+		} else {
+			this.duck = false
+		}
+
+		if (wasducked && !this.duck) {
+			if (this.standbox.colliders.some((collider) => {
+				return collider.type === 'stop' && this.physics.y > collider.y && this.physics.y < collider.y + collider.h
+			})) {
+				this.duck = true
+			} else {
+				this.hitbox._y = 0
+				this.hitbox.h = 64
+			}
 		}
 
 		const prevHeading = this.headingLeft
@@ -176,6 +206,7 @@ export class Player implements GameObject {
 			}
 		})
 		this.physics.yfriction = (this.wallsliding && this.falling) ? 200 : 0
+
 
 		if (this.onfloor || !this.falling || this.rolling) {
 			this.wallsliding = false
@@ -219,14 +250,23 @@ export class Player implements GameObject {
 			if (!['wallsliding'].includes(this.sprite.curAnimation))
 				this.sprite.setCurAnimation('wallsliding')
 		} else if (!this.running && !this.jumping && !this.rolling && !this.falling) {
-			if (this.sprite.animTime > this.iddleTime) {
+			if (this.duck) {
+				if (!['duck'].includes(this.sprite.curAnimation)) {
+					this.sprite.setCurAnimation('duck')
+				}
+			} else if (this.sprite.animTime > this.iddleTime) {
 				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
-			} else if (!['prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain', 'roll'].includes(this.sprite.curAnimation)) {
+			} else if (!['fromducktostand' ,'prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain', 'roll'].includes(this.sprite.curAnimation)) {
 				this.sprite.setCurAnimation('prepare')	
 			}
-		} else if (this.running && !this.jumping && !this.rolling && !this.falling &&
-			!['run', 'torun'].includes(this.sprite.curAnimation)) {
-			this.sprite.setCurAnimation('torun')
+		} else if (this.running && !this.jumping && !this.rolling && !this.falling) {
+			if (this.duck) {
+				if (!['duckwalk'].includes(this.sprite.curAnimation)) {
+					this.sprite.setCurAnimation('duckwalk')
+				}
+			} else if (!['run', 'torun'].includes(this.sprite.curAnimation)) {
+				this.sprite.setCurAnimation('torun')
+			}
 		} else if (this.jumping && !this.falling) {
 			if (!this.rolling) {
 				if (!this.running) {
@@ -254,10 +294,11 @@ export class Player implements GameObject {
 		if (this.sprite.update()) {
 			switch(this.sprite.curAnimation) {
 				case 'roll':
-					this.sprite.setCurAnimation('prepare')
+					this.sprite.setCurAnimation('duck')
 					this.rolling = false
-					this.hitbox._y = 0
-					this.hitbox.h = 64
+					this.duck = true
+					this.hitbox._y = 32
+					this.hitbox.h = 32
 					break;
 				case 'toprepare':
 					this.sprite.setCurAnimation('prepare')
@@ -286,9 +327,9 @@ export class Player implements GameObject {
 				case 'bumppain':
 					this.headbumping = false
 					this.cantmove = false
-					this.hitbox._y = 0
-					this.hitbox.h = 64
-					this.sprite.setCurAnimation('stand')
+					this.hitbox._y = 32
+					this.hitbox.h = 32
+					this.sprite.setCurAnimation('duck')
 					break;
 			}
 		}

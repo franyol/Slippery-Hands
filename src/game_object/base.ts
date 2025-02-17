@@ -101,7 +101,7 @@ export class Physics {
 	}
 }
 
-export type HitBoxTypes = 'standard' | 'stop' | 'ui'
+export type HitBoxTypes = 'standard' | 'stop' | 'ui' | 'virtual'
 
 export class HitBox {
 	parent: Physics
