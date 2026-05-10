@@ -1,21 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <title>Slippery Hands</title>
-    <!-- Link to the stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <head>
+        <title>Slippery Hands</title>
+        <!-- Link to the stylesheet -->
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+        />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
 
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
-</head>
-<body>
-	<canvas id="game-screen" style="margin: 0; padding: 0; box-sizing: border-box;"></canvas>
-	<canvas id="ui-layer" style="position: absolute; top: 0; left: 0;"></canvas>
+        <!-- Scripts -->
+        <script src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
+    </head>
+    <body>
+        <canvas
+            id="game-screen"
+            style="margin: 0; padding: 0; box-sizing: border-box"
+        ></canvas>
+        <canvas
+            id="ui-layer"
+            style="position: absolute; top: 0; left: 0"
+        ></canvas>
 
-    <div class="assets">
-        <!-- Image -->
-		<!--<img id="player" src="{{ url_for('static', filename='assets/images/player.png') }}" alt="Player">-->
-    </div>
-</body>
+        <div class="assets">
+            <!-- Image -->
+            <!--<img id="player" src="{{ url_for('static', filename='assets/images/player.png') }}" alt="Player">-->
+        </div>
+    </body>
 </html>

@@ -1,18 +1,20 @@
 {
-  "name": "slipperyhands",
-  "version": "1.0.0",
-  "main": "webpack.config.js",
-  "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-	"dev": "python3 scripts/watcher.py"
-  },
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.7.3",
-    "webpack-cli": "^6.0.1"
-  }
+    "name": "slipperyhands",
+    "version": "1.0.0",
+    "main": "webpack.config.js",
+    "scripts": {
+        "build": "webpack --config webpack.config.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "python3 scripts/watcher.py",
+        "format": "prettier . --write"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "prettier": "^3.8.3",
+        "ts-loader": "^9.5.2",
+        "typescript": "^5.7.3",
+        "webpack-cli": "^6.0.1"
+    }
 }

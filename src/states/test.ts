@@ -1,62 +1,196 @@
-import { GameSingleton } from "../game/game";
-import { Block } from "../game_object/block";
-import { CameraFollowSingleton } from "../game_object/environments/cam_follow";
-import { CollidedSingleton } from "../game_object/environments/collisions";
-import { GravitySingleton } from "../game_object/environments/gravity";
-import { InBoundsSingleton } from "../game_object/environments/out_of_bouds";
-import { Player } from "../game_object/player/player";
-import { State } from "./fsm";
+import { GameSingleton } from '../game/game'
+import { Block } from '../game_object/block'
+import { CameraFollowSingleton } from '../game_object/environments/cam_follow'
+import { CollidedSingleton } from '../game_object/environments/collisions'
+import { GravitySingleton } from '../game_object/environments/gravity'
+import { InBoundsSingleton } from '../game_object/environments/out_of_bouds'
+import { Player } from '../game_object/player/player'
+import { State } from './fsm'
 
 export class TestState extends State {
-	on_enter() {
-		this.environments.push(InBoundsSingleton.getInstance())
-		this.environments.push(CollidedSingleton.getInstance())
-		this.environments.push(GravitySingleton.getInstance())
-		this.environments.push(CameraFollowSingleton.getInstance())
+    on_enter() {
+        this.environments.push(InBoundsSingleton.getInstance())
+        this.environments.push(CollidedSingleton.getInstance())
+        this.environments.push(GravitySingleton.getInstance())
+        this.environments.push(CameraFollowSingleton.getInstance())
 
-		this.register(new Player(0, 1500));
+        this.register(new Player(0, 1500))
 
-		// Starting platform
-		this.register(new Block(0, 1800, 800, 100, false, 'blue'));
+        // Starting platform
+        this.register(
+            new Block({
+                x: 0,
+                y: 1800,
+                w: 800,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// First obstacle (must jump)
-		this.register(new Block(200, 1060, 80, 700, false, 'blue'));
-		this.register(new Block(400, 760, 80, 700, false, 'blue'));
+        // First obstacle (must jump)
+        this.register(
+            new Block({
+                x: 200,
+                y: 1060,
+                w: 80,
+                h: 700,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 400,
+                y: 760,
+                w: 80,
+                h: 700,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// Small gap for rolling
-		this.register(new Block(400, 1600, 200, 100, false, 'blue'));
-		this.register(new Block(700, 1600, 160, 100, false, 'blue'));
+        // Small gap for rolling
+        this.register(
+            new Block({
+                x: 400,
+                y: 1600,
+                w: 200,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 700,
+                y: 1600,
+                w: 160,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// Higher platform (jump required)
-		this.register(new Block(1000, 1500, 200, 100, false, 'blue'));
+        // Higher platform (jump required)
+        this.register(
+            new Block({
+                x: 1000,
+                y: 1500,
+                w: 200,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// Series of platforms
-		this.register(new Block(1300, 1400, 150, 40, false, 'blue'));
-		this.register(new Block(1500, 1300, 150, 40, false, 'blue'));
-		this.register(new Block(1700, 1200, 150, 40, false, 'blue'));
-		this.register(new Block(1800, 1100, 150, 40, false, 'blue'));
+        // Series of platforms
+        this.register(
+            new Block({
+                x: 1300,
+                y: 1400,
+                w: 150,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 1500,
+                y: 1300,
+                w: 150,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 1700,
+                y: 1200,
+                w: 150,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 1800,
+                y: 1100,
+                w: 150,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// Wide gap with small platform in between
-		this.register(new Block(2000, 1000, 100, 40, false, 'blue'));
-		this.register(new Block(2300, 1000, 100, 40, false, 'blue'));
+        // Wide gap with small platform in between
+        this.register(
+            new Block({
+                x: 2000,
+                y: 1000,
+                w: 100,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 2300,
+                y: 1000,
+                w: 100,
+                h: 40,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// Landing platform
-		this.register(new Block(2600, 1400, 300, 100, false, 'blue'));
+        // Landing platform
+        this.register(
+            new Block({
+                x: 2600,
+                y: 1400,
+                w: 300,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
 
-		// End section with an obstacle
-		this.register(new Block(3000, 1300, 80, 200, false, 'blue'));
-		this.register(new Block(3200, 1800, 500, 100, false, 'blue'));
+        // End section with an obstacle
+        this.register(
+            new Block({
+                x: 3000,
+                y: 1300,
+                w: 80,
+                h: 200,
+                moving: false,
+                color: 'blue',
+            })
+        )
+        this.register(
+            new Block({
+                x: 3200,
+                y: 1800,
+                w: 500,
+                h: 100,
+                moving: false,
+                color: 'blue',
+            })
+        )
+    }
+    on_exit() {
+        this.clean()
+    }
 
-	}
-	on_exit() {
-		this.clean()
-	}
+    update() {
+        super.update()
+    }
 
-	update() {
-		super.update()
-	}
-
-	render() {
-		super.render()
-	}
+    render() {
+        super.render()
+    }
 }
