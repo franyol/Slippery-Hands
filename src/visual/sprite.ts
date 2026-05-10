@@ -139,7 +139,7 @@ export class Sprite {
         if (!this.isReady()) {
             return false
         }
-        if (!this.current) {
+        if (this.frameIsEmpty) {
             return true
         }
         const game = GameSingleton.getInstance()

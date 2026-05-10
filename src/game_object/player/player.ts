@@ -45,6 +45,7 @@ export class Player extends GameObject {
 
     animationQueue: string[]
     animationEndCallbacks: Record<string, () => void> = {}
+    animId: string = ''
 
     runningspeed: number = 50
     xacceleration: number = this.runningspeed / 3
@@ -101,6 +102,7 @@ export class Player extends GameObject {
             fromrunfalling: [],
             toprepare: [5],
             prepare: [6, 7],
+            fromprepare: [5],
             torun: [8],
             run: [9, 10, 11, 12, 13, 14, 15, 12],
             fromrun: [8],
@@ -150,6 +152,8 @@ export class Player extends GameObject {
                 this.states.jumping = false
             }
         })
+
+        this.sprite.setCurAnimation('stand')
     }
 
     update() {
@@ -184,6 +188,7 @@ export class Player extends GameObject {
                 this.states.walljumping ||
                 this.states.wallsliding
             )
+        if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
         this.states.duckByCollision = false
     }
@@ -299,71 +304,97 @@ export class Player extends GameObject {
             this.animationQueue = []
         }
         const queueAnimations = ({
+            id,
             cancel,
             animations,
         }: {
-            cancel: Boolean
+            id: string
+            cancel: boolean
             animations: string[]
         }) => {
-            if (!animations.includes(curAni)) {
-                if (cancel) cancelAnimation()
+
+            if (id !== this.animId) {
+
+                this.animId = id;
+
+                if (cancel) {
+                    cancelAnimation();
+                }
+
                 if (animationWasCancelled) {
-                    // cut off changing from the last frame
-                    // since animation cancel doesn't ensure the frame is
-                    // in the frame it is suposed to end
                     animations = animations.filter(
                         (name) => !name.startsWith('from')
-                    )
+                    );
                 }
-                this.animationQueue.push(...animations)
+
+                this.animationQueue.push(...animations);
             }
-        }
+        };
+
 
         if (this.states.stand) {
-            if (curAni != 'idle') {
+            if (!this.states.idle) {
                 queueAnimations({
+                    id: 'prepare',
                     cancel: true,
-                    animations: ['from' + curAni, 'tostand', 'stand'],
+                    animations: ['from' + curAni, 'toprepare', 'prepare'],
                 })
             }
             if (this.sprite.animTime > this.idleTime) {
-                // Idle animation after a while standing
-                queueAnimations({
-                    cancel: false,
-                    animations: ['idle', 'stand'],
-                })
+                if (this.states.idle === false) {
+                    queueAnimations({
+                        id: 'stand',
+                        cancel: true,
+                        animations: ['tostand', 'stand'],
+                    })
+                    this.states.idle = true
+                } else {
+                    queueAnimations({
+                        id: 'idle',
+                        cancel: true,
+                        animations: ['idle', 'stand'],
+                    })
+                }
             }
         } else if (this.states.rolling) {
             queueAnimations({
+                id: 'roll',
                 cancel: true,
                 animations: ['roll', 'fromroll'],
             })
         } else if (this.states.duckwalking) {
             queueAnimations({
+                id: 'duckwalk',
                 cancel: true,
                 animations: ['duckwalk'],
             })
         } else if (this.states.duck) {
             queueAnimations({
+                id: 'duck',
                 cancel: true,
                 animations: ['from' + curAni, 'duck'],
             })
         } else if (this.states.falling) {
             if (this.states.running) {
-                queueAnimations({ cancel: true, animations: ['runfalling'] })
+                queueAnimations({ id: 'rf', cancel: true, animations: ['runfalling'] })
             } else {
-                queueAnimations({ cancel: true, animations: ['falling'] })
+                queueAnimations({ id: 'falling', cancel: true, animations: ['falling'] })
             }
         } else if (this.states.jumping) {
             const animations = this.states.running
                 ? ['torunjump', 'runjump']
                 : ['tostilljump', 'stilljump']
+            const id = this.states.running
+                ? 'runjump'
+                : 'stilljump'
             queueAnimations({
+                id,
                 cancel: true,
                 animations,
             })
         } else if (this.states.running) {
             queueAnimations({
+                id: 'run',
                 cancel: true,
                 animations: ['from' + curAni, 'torun', 'run'],
             })
