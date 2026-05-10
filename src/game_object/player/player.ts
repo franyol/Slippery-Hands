@@ -307,30 +307,29 @@ export class Player extends GameObject {
             id,
             cancel,
             animations,
+            repeat = false,
         }: {
             id: string
             cancel: boolean
             animations: string[]
+            repeat?: boolean
         }) => {
-
-            if (id !== this.animId) {
-
-                this.animId = id;
+            if (id !== this.animId || repeat) {
+                this.animId = id
 
                 if (cancel) {
-                    cancelAnimation();
+                    cancelAnimation()
                 }
 
                 if (animationWasCancelled) {
                     animations = animations.filter(
                         (name) => !name.startsWith('from')
-                    );
+                    )
                 }
 
-                this.animationQueue.push(...animations);
+                this.animationQueue.push(...animations)
             }
-        };
-
+        }
 
         if (this.states.stand) {
             if (!this.states.idle) {
@@ -353,6 +352,7 @@ export class Player extends GameObject {
                         id: 'idle',
                         cancel: true,
                         animations: ['idle', 'stand'],
+                        repeat: true,
                     })
                 }
             }
@@ -376,17 +376,23 @@ export class Player extends GameObject {
             })
         } else if (this.states.falling) {
             if (this.states.running) {
-                queueAnimations({ id: 'rf', cancel: true, animations: ['runfalling'] })
+                queueAnimations({
+                    id: 'rf',
+                    cancel: true,
+                    animations: ['runfalling'],
+                })
             } else {
-                queueAnimations({ id: 'falling', cancel: true, animations: ['falling'] })
+                queueAnimations({
+                    id: 'falling',
+                    cancel: true,
+                    animations: ['falling'],
+                })
             }
         } else if (this.states.jumping) {
             const animations = this.states.running
                 ? ['torunjump', 'runjump']
                 : ['tostilljump', 'stilljump']
-            const id = this.states.running
-                ? 'runjump'
-                : 'stilljump'
+            const id = this.states.running ? 'runjump' : 'stilljump'
             queueAnimations({
                 id,
                 cancel: true,
