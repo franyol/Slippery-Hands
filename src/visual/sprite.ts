@@ -29,6 +29,8 @@ export class Sprite {
     frameTime: number = 0
     ui: boolean
 
+    frameIsEmpty: boolean = false
+
     constructor(dir: string, name: string, ui: boolean = false) {
         this.ui = ui
         this.dir = dir
@@ -126,12 +128,19 @@ export class Sprite {
         this.animIdx = 0
         this.animTime = 0
         this.frameTime = 0
-        this.current = this.animations[key][0]
+
+        this.frameIsEmpty = this.animations[key][0] === undefined
+        this.current = this.frameIsEmpty
+            ? this.current
+            : this.animations[key][0]
     }
 
     update(): boolean {
         if (!this.isReady()) {
-            return
+            return false
+        }
+        if (!this.current) {
+            return true
         }
         const game = GameSingleton.getInstance()
         this.animTime += game.dt

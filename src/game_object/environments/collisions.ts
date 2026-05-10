@@ -22,36 +22,68 @@ export class Collided implements Environment {
             switch (hb.type) {
                 case 'stop':
                 case 'standard':
+                case 'virtual':
                     hb.colliders.map((collider) => {
                         if (collider.type !== 'stop') return
                         const x_1 = hb.getx(1)
                         const y_1 = hb.gety(1)
-                        let side = ""
+                        let side = ''
                         if (x_1 + hb.w <= collider.x) {
-                            // collider to the right
-                            hb.parent.x = collider.x - hb.w - hb._x
-                            hb.parent.xspeed = 0
-                            side = "right"
+                            side = 'right'
                         } else if (x_1 >= collider.x + collider.w) {
-                            // collider to the left
-                            hb.parent.x = collider.x + collider.w - hb._x
-                            hb.parent.xspeed = 0
-                            side = "left"
+                            side = 'left'
                         } else if (y_1 + hb.h <= collider.y) {
-                            // collider to the bottom
-                            hb.parent.y = collider.y - hb.h - hb._y
-                            hb.parent.yspeed = 0
-                            side = "bottom"
+                            side = 'bottom'
                         } else if (y_1 >= collider.y + collider.h) {
-                            // collider to the top
-                            hb.parent.y = collider.y + collider.h - hb._y
-                            hb.parent.yspeed = 0
-                            side = "top"
+                            side = 'top'
                         } else {
-                            console.log(`x_1: ${x_1} x_2: ${hb.w} y_1: ${y_1}`)
-                            console.log(collider)
+                            // overlap case
+                            const overlapLeft = x_1 + hb.w - collider.x
+                            const overlapRight = collider.x + collider.w - x_1
+                            const overlapTop = y_1 + hb.h - collider.y
+                            const overlapBottom = collider.y + collider.h - y_1
+                            const minOverlap = Math.min(
+                                overlapLeft,
+                                overlapRight,
+                                overlapTop,
+                                overlapBottom
+                            )
+
+                            if (minOverlap === overlapLeft) {
+                                side = 'right'
+                            } else if (minOverlap === overlapRight) {
+                                side = 'left'
+                            } else if (minOverlap === overlapTop) {
+                                side = 'bottom'
+                            } else {
+                                side = 'top'
+                            }
                         }
-                        hb.parent.parent.emit("collision", side);
+                        if (hb.type != 'virtual') {
+                            switch (side) {
+                                case 'right':
+                                    hb.parent.x = collider.x - hb.w - hb._x
+                                    hb.parent.xspeed = 0
+                                    break
+                                case 'left':
+                                    hb.parent.x =
+                                        collider.x + collider.w - hb._x
+                                    hb.parent.xspeed = 0
+                                    break
+                                case 'top':
+                                    hb.parent.y =
+                                        collider.y + collider.h - hb._y
+                                    hb.parent.yspeed = 0
+                                    break
+                                case 'bottom':
+                                    hb.parent.y = collider.y - hb.h - hb._y
+                                    hb.parent.yspeed = 0
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                        hb.parent.parent.emit('collision', side, hb)
                     })
                     break
                 default:

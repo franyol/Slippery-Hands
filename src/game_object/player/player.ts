@@ -24,6 +24,8 @@ export class Player extends GameObject {
     sprite: Sprite
 
     states = {
+        stand: false,
+        idle: false,
         headingLeft: false,
         jumping: false,
         falling: false,
@@ -35,16 +37,21 @@ export class Player extends GameObject {
         wallsliding: false,
         walljumping: false,
         duck: false,
+        duckwalking: false,
+        duckByCollision: false,
     }
 
     jumpcount: number = 0
+
+    animationQueue: string[]
+    animationEndCallbacks: Record<string, () => void> = {}
 
     runningspeed: number = 50
     xacceleration: number = this.runningspeed / 3
     duckspeed: number = 20
     rollspeed: number = 70
     jumpingForce: number = 210
-    iddleTime: number = 5000
+    idleTime: number = 5000
     walljumpimpulse: number = 210
 
     // Input
@@ -68,45 +75,44 @@ export class Player extends GameObject {
         this.printbox = new HitBox(this.physics, 0, 0, 64, 64, 'standard', 0)
         this.hitbox = new HitBox(this.physics, 13, 0, 38, 64, 'standard', 0)
         this.standbox = new HitBox(this.physics, 13, 0, 38, 64, 'virtual', 0)
+        this.animationQueue = []
         this.sprite.loadAnimations({
-            stand: [0, 1],
-            duck: [33],
-            duckwalk: [34, 35, 36, 35, 34, 37, 38, 37],
-            fromducktostand: [33],
-            wallsliding: [32],
-            toiddle: [2],
-            fromiddle: [2],
-            iddle: [3, 4, 3, 4, 3, 4, 3],
             tostand: [5],
+            stand: [0, 1],
+            fromstand: [5],
+            toduck: [8],
+            duck: [33],
+            fromduck: [8],
+            duckwalk: [34, 35, 36, 35, 34, 37, 38, 37],
+            fromduckwalk: [],
+            wallsliding: [32],
+            toidle: [2],
+            fromidle: [2],
+            idle: [3, 4, 3, 4, 3, 4, 3],
             tostilljump: [16],
             stilljump: [17],
             torunjump: [31],
             runjump: [13],
             falling: [18],
+            fromfalling: [],
             bumpfalling: [19],
             bumppain: [20, 21, 22, 21, 22, 23, 24, 23, 24, 22, 20],
             runfalling: [13],
+            fromrunfalling: [],
             toprepare: [5],
             prepare: [6, 7],
             torun: [8],
-            roll: [25, 26, 27, 28, 29, 30],
             run: [9, 10, 11, 12, 13, 14, 15, 12],
+            fromrun: [8],
+            roll: [25, 26, 27, 28, 29, 30],
+            fromroll: [],
         })
         this.sprite.setCurAnimation('stand')
+
         this.cooldowns = {
-            rolling: new Cooldown(() => {
-                this.states.rolling = true
-                this.sprite.setCurAnimation('roll')
-                this.hitbox._y = 32
-                this.hitbox.h = 32
-                this.states.headbumping = false
-            }, 1200),
-            stopwalljump: new Cooldown(() => {
-                this.states.walljumping = false
-            }, 100),
-            regainwalljumpctl: new Cooldown(() => {
-                this.states.walljumping = false
-            }, 300),
+            rolling: new Cooldown(1200),
+            stopwalljump: new Cooldown(100),
+            regainwalljumpctl: new Cooldown(300),
         }
         this.buffers = {
             jump: new Buffered(100),
@@ -114,6 +120,12 @@ export class Player extends GameObject {
         }
         this.pressOnce = {
             jump: new Once(),
+            roll: new Once(),
+        }
+
+        // Control states on animation end
+        this.animationEndCallbacks['roll'] = () => {
+            this.states.rolling = false
         }
 
         InBoundsSingleton.getInstance().register(this.hitbox)
@@ -122,12 +134,22 @@ export class Player extends GameObject {
         GravitySingleton.getInstance().register(this.hitbox)
         CameraFollowSingleton.getInstance().register(this.printbox)
 
-        this.on("collision", (side: string) => {
-            if (side === "bottom") {
+        this.on('collision', (side: string, hb: HitBox) => {
+            if (hb === this.standbox) {
+                if (side === 'top') {
+                    if (this.states.jumping === true) {
+                        this.states.headbumping = true
+                    } else {
+                        this.states.duckByCollision = true
+                    }
+                }
+                return
+            }
+            if (side === 'bottom') {
                 this.states.onfloor = true
                 this.states.jumping = false
             }
-        });
+        })
     }
 
     update() {
@@ -144,120 +166,33 @@ export class Player extends GameObject {
             bf.update()
         })
 
-        this.handleAnimations()
-
         this.handleInputs(inputHandler)
+
+        this.handleAnimations()
 
         this.physics.update()
 
-        /*
-		// Force jump direction
-		this.cooldowns['regainwalljumpctl'].request()
-		if (this.walljumping) {
-			if (this.headingLeft) {
-				left = true
-				right = false
-			} else {
-				right = true
-				left = false
-			}
-		}
-
-		this.running = false
-		if (this.rolling && !this.cantmove) {
-			this.physics.xspeed = (this.headingLeft) ? -this.rollspeed : this.rollspeed
-		} else if (left && !this.cantmove) {
-			this.physics.xspeed = this.duck ? -this.duckspeed : -this.runningspeed
-			this.headingLeft = true
-			this.running = true
-		} else if (right && !this.cantmove) {
-			this.physics.xspeed = this.duck ? this.duckspeed : this.runningspeed
-			this.headingLeft = false
-			this.running = true
-		}
-
-		if (down && this.running && !this.cantmove && !this.headbumping && !this.duck && !(this.jumping && !this.falling)) {
-			this.cooldowns['rolling'].request()
-		}
-
-		const wasducked = this.duck
-	 	if (down && !this.rolling && this.onfloor && !this.headbumping && !(!wasducked && this.running)) {
-			this.duck = true
-			this.hitbox._y = 32
-			this.hitbox.h = 32
-		} else {
-			this.duck = false
-		}
-
-		if (wasducked && !this.duck) {
-			if (this.standbox.colliders.some((collider) => {
-				return collider.type === 'stop' && this.physics.y > collider.y && this.physics.y < collider.y + collider.h
-			})) {
-				this.duck = true
-			} else {
-				this.hitbox._y = 0
-				this.hitbox.h = 64
-			}
-		}
-
-		const prevHeading = this.headingLeft
-		this.onfloor = false
-		this.wallsliding = false
-		this.hitbox.colliders.map((collider) => {
-			if (collider.y >= this.physics.y + this.hitbox.h) {
-				this.onfloor = true
-			} else if (collider.y + collider.h <= this.hitbox.y && collider.type === 'stop' && !this.rolling) {
-				this.headbumping = true
-			} else if (collider.x >= this.hitbox.x + this.hitbox.w && collider.type === 'stop' && !this.rolling) {
-				this.wallsliding = true
-				this.cooldowns['stopwalljump'].request()
-				this.headingLeft = true
-			} else if (collider.x + collider.w <= this.hitbox.x && collider.type === 'stop' && !this.rolling) {
-				this.wallsliding = true
-				this.cooldowns['stopwalljump'].request()
-				this.headingLeft = false
-			}
-		})
-		this.physics.yfriction = (this.wallsliding && this.falling) ? 200 : 0
-
-
-		if (this.onfloor || !this.falling || this.rolling) {
-			this.wallsliding = false
-			this.headingLeft = prevHeading
-		}
-
-		if (this.buffers['jump'].request(up, !this.cantmove && (this.wallsliding || !this.headbumping && this.jumpcount < 1 && this.buffers['coyotetime'].retain(this.onfloor)))) {
-			if (this.wallsliding) {
-				this.walljumping = true
-				this.cooldowns['regainwalljumpctl'].current = 0
-			}
-			this.physics.yspeed = this.walljumping ? -this.walljumpimpulse : -this.jumpingForce
-			this.jumpcount++
-			this.jumping = true
-			this.rolling = false
-			this.hitbox._y = 0
-			this.hitbox.h = 64
-		} else if (this.onfloor) {
-			this.jumping = false
-			this.jumpcount = 0
-			this.walljumping = false
-		}
-
-		if (this.headbumping) {
-			this.cantmove = true
-			this.sprite.setCurAnimation('bumppain')
-			this.hitbox._y = 32
-			this.hitbox.h = 32
-		}
-
-		this.falling = this.physics.yspeed > 0 && !this.onfloor
-        */
+        // States reset
+        this.states.falling = this.physics.yspeed > 0 && !this.states.onfloor
+        this.states.stand =
+            this.states.onfloor &&
+            !(
+                this.states.duck ||
+                this.states.running ||
+                this.states.jumping ||
+                this.states.rolling ||
+                this.states.walljumping ||
+                this.states.wallsliding
+            )
+        this.states.onfloor = false
+        this.states.duckByCollision = false
     }
 
     handleInputs(inputHandler: InputHandler) {
         // Handle inputs
         const inputs = {
             up: false,
+            roll: false,
             down: false,
             left: false,
             right: false,
@@ -267,32 +202,84 @@ export class Player extends GameObject {
             inputHandler.getBindingState('jump') === 'down'
         )
         inputs.down = inputHandler.getBindingState('roll') === 'down'
+        inputs.roll = this.pressOnce['roll'].request(inputs.down)
         inputs.left = inputHandler.getBindingState('left') === 'down'
         inputs.right = inputHandler.getBindingState('right') === 'down'
 
-        const can_jump = (
+        const can_jump =
             this.states.jumping === false &&
             // retain onfloor some time before not flooring
             this.buffers['coyotetime'].retain(this.states.onfloor) === true
-        )
-        this.states.onfloor = false;
+        const can_duck =
+            this.states.onfloor === true &&
+            this.states.running === false &&
+            this.states.rolling === false
+        const can_roll =
+            this.states.running === true && this.states.duck === false
+        const rolling_left = this.states.rolling && this.states.headingLeft
+        const rolling_right = this.states.rolling && !this.states.headingLeft
 
-        // Runing and jumping
+        // **************** JUMPING *********************
         if (this.buffers['jump'].request(inputs.up, can_jump)) {
             this.physics.yspeed -= this.jumpingForce
             this.states.jumping = true
+            this.states.rolling = false
         }
-        if (inputs.left) {
+
+        // **************** RUN *********************
+        this.states.running = false
+        this.states.duckwalking = false
+        if ((inputs.left || rolling_left) && !rolling_right) {
+            if (!this.states.duck && !this.states.rolling)
+                this.states.running = true
+            this.states.duckwalking = this.states.duck
             this.states.headingLeft = true
-            if (this.physics.xspeed > -this.runningspeed)
+
+            const speed = this.states.duck
+                ? this.duckspeed
+                : this.states.rolling
+                  ? this.rollspeed
+                  : this.runningspeed
+            if (this.physics.xspeed > -speed)
                 this.physics.xspeed -= this.xacceleration
         }
-        if (inputs.right) {
+
+        if ((inputs.right || rolling_right) && !rolling_left) {
+            if (!this.states.duck && !this.states.rolling)
+                this.states.running = true
+            this.states.duckwalking = this.states.duck
             this.states.headingLeft = false
-            if (this.physics.xspeed < this.runningspeed)
+
+            const speed = this.states.duck
+                ? this.duckspeed
+                : this.states.rolling
+                  ? this.rollspeed
+                  : this.runningspeed
+            if (this.physics.xspeed < speed)
                 this.physics.xspeed += this.xacceleration
         }
-        if (inputs.down) {
+
+        this.states.running == !(inputs.right || inputs.left)
+
+        // **************** ROLL AND DUCK *********************
+        if (inputs.down || this.states.duckByCollision) {
+            if (can_duck) {
+                this.states.duck = true
+                this.hitbox._y = 32
+                this.hitbox.h = 32
+            }
+        } else if (this.states.duckByCollision) {
+            // If collision on top, forces ducking
+            // Lower the state to check the collision again
+            this.states.duckByCollision = false
+        } else if (!this.states.rolling) {
+            this.states.duck = false
+            this.hitbox._y = 0
+            this.hitbox.h = 64
+        }
+
+        if (inputs.roll && can_roll && this.cooldowns['rolling'].request()) {
+            this.states.rolling = true
             this.hitbox._y = 32
             this.hitbox.h = 32
         }
@@ -300,95 +287,99 @@ export class Player extends GameObject {
 
     handleAnimations() {
         // Trigger animations by condition
-        /*
-		if (this.states.wallsliding && !this.states.rolling) {
-			if (!['wallsliding'].includes(this.sprite.curAnimation))
-				this.sprite.setCurAnimation('wallsliding')
-		} else if (!this.states.running && !this.states.jumping && !this.states.rolling && !this.states.falling) {
-			if (this.states.duck) {
-				if (!['duck'].includes(this.sprite.curAnimation)) {
-					this.sprite.setCurAnimation('duck')
-				}
-			} else if (this.sprite.animTime > this.iddleTime) {
-				this.sprite.setCurAnimation((this.sprite.curAnimation === 'prepare') ? 'tostand' : 'toiddle')
-			} else if (!['fromducktostand' ,'prepare', 'toprepare', 'stand', 'tostand', 'toiddle', 'iddle', 'fromiddle', 'bumppain', 'roll'].includes(this.sprite.curAnimation)) {
-				this.sprite.setCurAnimation('prepare')
-			}
-		} else if (this.states.running && !this.states.jumping && !this.states.rolling && !this.states.falling) {
-			if (this.states.duck) {
-				if (!['duckwalk'].includes(this.sprite.curAnimation)) {
-					this.sprite.setCurAnimation('duckwalk')
-				}
-			} else if (!['run', 'torun'].includes(this.sprite.curAnimation)) {
-				this.sprite.setCurAnimation('torun')
-			}
-		} else if (this.states.jumping && !this.states.falling) {
-			if (!this.states.rolling) {
-				if (!this.states.running) {
-					if (!['stilljump', 'tostilljump'].includes(this.sprite.curAnimation))
-						this.sprite.setCurAnimation('tostilljump')
-				} else {
-					if (!['runjump', 'torunjump'].includes(this.sprite.curAnimation))
-						this.sprite.setCurAnimation('torunjump')
-				}
-			}
-		} else if (this.states.falling && !this.states.rolling) {
-				if (this.states.headbumping) {
-					if (!['bumpfalling'].includes(this.sprite.curAnimation))
-					this.sprite.setCurAnimation('bumpfalling')
-				} else if (!this.states.running) {
-					if (!['falling'].includes(this.sprite.curAnimation))
-					this.sprite.setCurAnimation('falling')
-				} else {
-					if (!['runfalling'].includes(this.sprite.curAnimation))
-					this.sprite.setCurAnimation('runfalling')
-				}
-			}
+        const curAni = this.sprite.curAnimation
+        let animationWasCancelled = false
+        let skipRestOfAnimation = false
 
-		// Trigger animations automatically
-		if (this.sprite.update()) {
-			switch(this.sprite.curAnimation) {
-				case 'roll':
-					this.sprite.setCurAnimation('duck')
-					this.states.rolling = false
-					this.states.duck = true
-					this.hitbox._y = 32
-					this.hitbox.h = 32
-					break;
-				case 'toprepare':
-					this.sprite.setCurAnimation('prepare')
-					break;
-				case 'tostand':
-					this.sprite.setCurAnimation('stand')
-					break;
-				case 'iddle':
-					this.sprite.setCurAnimation('fromiddle')
-					break;
-				case 'fromiddle':
-					this.sprite.setCurAnimation('stand')
-					break;
-				case 'torun':
-					this.sprite.setCurAnimation('run')
-					break;
-				case 'toiddle':
-					this.sprite.setCurAnimation('iddle')
-					break;
-				case 'tostilljump':
-					this.sprite.setCurAnimation('stilljump')
-					break;
-				case 'tosrunjump':
-					this.sprite.setCurAnimation('runjump')
-					break;
-				case 'bumppain':
-					this.states.headbumping = false
-					this.states.cantmove = false
-					this.hitbox._y = 32
-					this.hitbox.h = 32
-					this.sprite.setCurAnimation('duck')
-					break;
-			}
-		}
-    */
+        const cancelAnimation = () => {
+            if (this.animationQueue.length > 0) {
+                animationWasCancelled = true
+            }
+            skipRestOfAnimation = true
+            this.animationQueue = []
+        }
+        const queueAnimations = ({
+            cancel,
+            animations,
+        }: {
+            cancel: Boolean
+            animations: string[]
+        }) => {
+            if (!animations.includes(curAni)) {
+                if (cancel) cancelAnimation()
+                if (animationWasCancelled) {
+                    // cut off changing from the last frame
+                    // since animation cancel doesn't ensure the frame is
+                    // in the frame it is suposed to end
+                    animations = animations.filter(
+                        (name) => !name.startsWith('from')
+                    )
+                }
+                this.animationQueue.push(...animations)
+            }
+        }
+
+        if (this.states.stand) {
+            if (curAni != 'idle') {
+                queueAnimations({
+                    cancel: true,
+                    animations: ['from' + curAni, 'tostand', 'stand'],
+                })
+            }
+            if (this.sprite.animTime > this.idleTime) {
+                // Idle animation after a while standing
+                queueAnimations({
+                    cancel: false,
+                    animations: ['idle', 'stand'],
+                })
+            }
+        } else if (this.states.rolling) {
+            queueAnimations({
+                cancel: true,
+                animations: ['roll', 'fromroll'],
+            })
+        } else if (this.states.duckwalking) {
+            queueAnimations({
+                cancel: true,
+                animations: ['duckwalk'],
+            })
+        } else if (this.states.duck) {
+            queueAnimations({
+                cancel: true,
+                animations: ['from' + curAni, 'duck'],
+            })
+        } else if (this.states.falling) {
+            if (this.states.running) {
+                queueAnimations({ cancel: true, animations: ['runfalling'] })
+            } else {
+                queueAnimations({ cancel: true, animations: ['falling'] })
+            }
+        } else if (this.states.jumping) {
+            const animations = this.states.running
+                ? ['torunjump', 'runjump']
+                : ['tostilljump', 'stilljump']
+            queueAnimations({
+                cancel: true,
+                animations,
+            })
+        } else if (this.states.running) {
+            queueAnimations({
+                cancel: true,
+                animations: ['from' + curAni, 'torun', 'run'],
+            })
+        }
+
+        // returns true when last animation ends
+        const animationIsFinished = this.sprite.update()
+
+        if (animationIsFinished || skipRestOfAnimation) {
+            // callback on end of animations
+            this.animationEndCallbacks[this.sprite.curAnimation]?.()
+            // select next animation
+            if (this.animationQueue.length > 0) {
+                this.sprite.setCurAnimation(this.animationQueue.shift())
+            }
+        }
     }
 
     render() {
