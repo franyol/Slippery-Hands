@@ -202,9 +202,11 @@ export class Player extends GameObject {
         if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
         this.states.duckByCollision = false
+        /* Early headbump end
         if (this.states.headbumping && this.cooldowns['bumppain'].request()) {
             this.states.cantmove = false
         }
+        */
     }
 
     handleInputs(inputHandler: InputHandler) {
