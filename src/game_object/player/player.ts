@@ -203,7 +203,6 @@ export class Player extends GameObject {
         this.states.onfloor = false
         this.states.duckByCollision = false
         if (this.states.headbumping && this.cooldowns['bumppain'].request()) {
-            this.states.headbumping = false
             this.states.cantmove = false
         }
     }
