@@ -1064,7 +1064,7 @@
                 t
             )
         })(),
-        g = (function () {
+        m = (function () {
             function t() {
                 this.states = []
             }
@@ -1089,10 +1089,10 @@
                 t
             )
         })(),
-        m = (function () {
+        g = (function () {
             function t() {
                 ;((this.dt = 0),
-                    (this.fsm = new g()),
+                    (this.fsm = new m()),
                     (this.width = 4e3),
                     (this.height = 4e3),
                     (this.camx = 0),
@@ -1207,7 +1207,7 @@
             function t() {}
             return (
                 (t.getInstance = function () {
-                    return (t.instance || (t.instance = new m()), t.instance)
+                    return (t.instance || (t.instance = new g()), t.instance)
                 }),
                 t
             )
@@ -1710,6 +1710,7 @@
                         fromfalling: [],
                         bumpfalling: [19],
                         bumppain: [20, 21, 22, 21, 22, 23, 24, 23, 24, 22, 20],
+                        frombumppain: [],
                         runfalling: [13],
                         fromrunfalling: [],
                         toprepare: [5],
@@ -1724,6 +1725,7 @@
                     s.sprite.setCurAnimation('stand'),
                     (s.cooldowns = {
                         rolling: new B(1200),
+                        bumppain: new B(500),
                         stopwalljump: new B(100),
                         regainwalljumpctl: new B(300),
                     }),
@@ -1731,6 +1733,9 @@
                     (s.pressOnce = { jump: new C(), roll: new C() }),
                     (s.animationEndCallbacks.roll = function () {
                         s.states.rolling = !1
+                    }),
+                    (s.animationEndCallbacks.bumppain = function () {
+                        ;((s.states.headbumping = !1), (s.states.cantmove = !1))
                     }),
                     E.getInstance().register(s.hitbox),
                     w.getInstance().register(s.hitbox),
@@ -1743,7 +1748,11 @@
                               ((s.states.onfloor = !0), (s.states.jumping = !1))
                             : 'top' === t &&
                               (!0 === s.states.jumping
-                                  ? (s.states.headbumping = !0)
+                                  ? ((s.states.headbumping = !0),
+                                    (s.states.cantmove = !0),
+                                    (s.states.falling = !0),
+                                    (s.states.jumping = !1),
+                                    s.cooldowns.bumppain.request())
                                   : (s.states.duckByCollision = !0))
                     }),
                     s.sprite.setCurAnimation('stand'),
@@ -1773,12 +1782,17 @@
                                 this.states.running ||
                                 this.states.jumping ||
                                 this.states.rolling ||
+                                this.states.headbumping ||
                                 this.states.walljumping ||
                                 this.states.wallsliding
                             )),
                         this.states.stand || (this.states.idle = !1),
                         (this.states.onfloor = !1),
-                        (this.states.duckByCollision = !1))
+                        (this.states.duckByCollision = !1),
+                        this.states.headbumping &&
+                            this.cooldowns.bumppain.request() &&
+                            ((this.states.headbumping = !1),
+                            (this.states.cantmove = !1)))
                 }),
                 (e.prototype.handleInputs = function (t) {
                     var e = { up: !1, roll: !1, down: !1, left: !1, right: !1 }
@@ -1790,20 +1804,24 @@
                         (e.left = 'down' === t.getBindingState('left')),
                         (e.right = 'down' === t.getBindingState('right')))
                     var i =
+                            !1 === this.states.cantmove &&
                             !1 === this.states.jumping &&
                             !0 ===
                                 this.buffers.coyotetime.retain(
                                     this.states.onfloor
                                 ),
                         n =
+                            !1 === this.states.cantmove &&
                             !0 === this.states.onfloor &&
                             !1 === this.states.running &&
                             !1 === this.states.rolling,
                         s =
+                            !1 === this.states.cantmove &&
                             !0 === this.states.running &&
                             !1 === this.states.duck,
-                        o = this.states.rolling && this.states.headingLeft,
-                        r = this.states.rolling && !this.states.headingLeft
+                        o = !1 === this.states.cantmove,
+                        r = this.states.rolling && this.states.headingLeft,
+                        a = this.states.rolling && !this.states.headingLeft
                     if (
                         (this.buffers.jump.request(e.up, i) &&
                             ((this.physics.yspeed -= this.jumpingForce),
@@ -1811,34 +1829,35 @@
                             (this.states.rolling = !1)),
                         (this.states.running = !1),
                         (this.states.duckwalking = !1),
-                        (e.left || o) && !r)
+                        (e.left || r) && !a && o)
                     ) {
                         ;(this.states.duck ||
                             this.states.rolling ||
                             (this.states.running = !0),
                             (this.states.duckwalking = this.states.duck),
                             (this.states.headingLeft = !0))
-                        var a = this.states.duck
+                        var h = this.states.duck
                             ? this.duckspeed
                             : this.states.rolling
                               ? this.rollspeed
                               : this.runningspeed
-                        this.physics.xspeed > -a &&
+                        this.physics.xspeed > -h &&
                             (this.physics.xspeed -= this.xacceleration)
                     }
-                    ;((!e.right && !r) ||
-                        o ||
+                    ;((e.right || a) &&
+                        !r &&
+                        o &&
                         (this.states.duck ||
                             this.states.rolling ||
                             (this.states.running = !0),
                         (this.states.duckwalking = this.states.duck),
                         (this.states.headingLeft = !1),
-                        (a = this.states.duck
+                        (h = this.states.duck
                             ? this.duckspeed
                             : this.states.rolling
                               ? this.rollspeed
                               : this.runningspeed),
-                        this.physics.xspeed < a &&
+                        this.physics.xspeed < h &&
                             (this.physics.xspeed += this.xacceleration)),
                         this.states.running,
                         e.right || e.left,
@@ -1911,6 +1930,18 @@
                                           animations: ['idle', 'stand'],
                                           repeat: !0,
                                       })))
+                    else if (this.states.headbumping)
+                        this.states.onfloor || 'bumppain' === n
+                            ? r({
+                                  id: 'bumppain',
+                                  cancel: !0,
+                                  animations: ['bumppain'],
+                              })
+                            : r({
+                                  id: 'headbump',
+                                  cancel: !0,
+                                  animations: ['bumpfalling'],
+                              })
                     else if (this.states.rolling)
                         r({
                             id: 'roll',

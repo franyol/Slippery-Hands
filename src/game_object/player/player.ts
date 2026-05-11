@@ -98,6 +98,7 @@ export class Player extends GameObject {
             fromfalling: [],
             bumpfalling: [19],
             bumppain: [20, 21, 22, 21, 22, 23, 24, 23, 24, 22, 20],
+            frombumppain: [],
             runfalling: [13],
             fromrunfalling: [],
             toprepare: [5],
@@ -113,6 +114,7 @@ export class Player extends GameObject {
 
         this.cooldowns = {
             rolling: new Cooldown(1200),
+            bumppain: new Cooldown(500),
             stopwalljump: new Cooldown(100),
             regainwalljumpctl: new Cooldown(300),
         }
@@ -129,6 +131,10 @@ export class Player extends GameObject {
         this.animationEndCallbacks['roll'] = () => {
             this.states.rolling = false
         }
+        this.animationEndCallbacks['bumppain'] = () => {
+            this.states.headbumping = false
+            this.states.cantmove = false
+        }
 
         InBoundsSingleton.getInstance().register(this.hitbox)
         CollidedSingleton.getInstance().register(this.hitbox)
@@ -141,6 +147,10 @@ export class Player extends GameObject {
                 if (side === 'top') {
                     if (this.states.jumping === true) {
                         this.states.headbumping = true
+                        this.states.cantmove = true
+                        this.states.falling = true
+                        this.states.jumping = false
+                        this.cooldowns['bumppain'].request()
                     } else {
                         this.states.duckByCollision = true
                     }
@@ -185,12 +195,17 @@ export class Player extends GameObject {
                 this.states.running ||
                 this.states.jumping ||
                 this.states.rolling ||
+                this.states.headbumping ||
                 this.states.walljumping ||
                 this.states.wallsliding
             )
         if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
         this.states.duckByCollision = false
+        if (this.states.headbumping && this.cooldowns['bumppain'].request()) {
+            this.states.headbumping = false
+            this.states.cantmove = false
+        }
     }
 
     handleInputs(inputHandler: InputHandler) {
@@ -212,15 +227,21 @@ export class Player extends GameObject {
         inputs.right = inputHandler.getBindingState('right') === 'down'
 
         const can_jump =
+            this.states.cantmove === false &&
             this.states.jumping === false &&
+            this.states.duckByCollision === false &&
             // retain onfloor some time before not flooring
             this.buffers['coyotetime'].retain(this.states.onfloor) === true
         const can_duck =
+            this.states.cantmove === false &&
             this.states.onfloor === true &&
             this.states.running === false &&
             this.states.rolling === false
         const can_roll =
-            this.states.running === true && this.states.duck === false
+            this.states.cantmove === false &&
+            this.states.running === true &&
+            this.states.duck === false
+        const can_move = this.states.cantmove === false
         const rolling_left = this.states.rolling && this.states.headingLeft
         const rolling_right = this.states.rolling && !this.states.headingLeft
 
@@ -234,7 +255,7 @@ export class Player extends GameObject {
         // **************** RUN *********************
         this.states.running = false
         this.states.duckwalking = false
-        if ((inputs.left || rolling_left) && !rolling_right) {
+        if ((inputs.left || rolling_left) && !rolling_right && can_move) {
             if (!this.states.duck && !this.states.rolling)
                 this.states.running = true
             this.states.duckwalking = this.states.duck
@@ -249,7 +270,7 @@ export class Player extends GameObject {
                 this.physics.xspeed -= this.xacceleration
         }
 
-        if ((inputs.right || rolling_right) && !rolling_left) {
+        if ((inputs.right || rolling_right) && !rolling_left && can_move) {
             if (!this.states.duck && !this.states.rolling)
                 this.states.running = true
             this.states.duckwalking = this.states.duck
@@ -355,6 +376,20 @@ export class Player extends GameObject {
                         repeat: true,
                     })
                 }
+            }
+        } else if (this.states.headbumping) {
+            if (!this.states.onfloor && !(curAni === 'bumppain')) {
+                queueAnimations({
+                    id: 'headbump',
+                    cancel: true,
+                    animations: ['bumpfalling'],
+                })
+            } else {
+                queueAnimations({
+                    id: 'bumppain',
+                    cancel: true,
+                    animations: ['bumppain'],
+                })
             }
         } else if (this.states.rolling) {
             queueAnimations({
