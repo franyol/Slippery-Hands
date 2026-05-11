@@ -83,7 +83,7 @@ export class Collided implements Environment {
                                     break
                             }
                         }
-                        hb.parent.parent.emit('collision', side, hb)
+                        hb.parent.parent.emit('collision', side, hb, collider)
                     })
                     break
                 default:

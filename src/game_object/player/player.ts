@@ -1,6 +1,7 @@
 import { Game, GameSingleton } from '../../game/game'
 import { Buffered } from '../../input_handler/buffered'
 import { Cooldown } from '../../input_handler/cooldown'
+import { Timer } from '../../input_handler/timer'
 import { InputHandler } from '../../input_handler/handler'
 import { Once } from '../../input_handler/once'
 import { Sprite } from '../../visual/sprite'
@@ -48,15 +49,18 @@ export class Player extends GameObject {
     animId: string = ''
 
     runningspeed: number = 50
-    xacceleration: number = this.runningspeed / 3
+    xacceleration: number = this.runningspeed / 9
+    airxacceleration: number = this.runningspeed / 12
     duckspeed: number = 20
     rollspeed: number = 70
     jumpingForce: number = 210
     idleTime: number = 5000
-    walljumpimpulse: number = 210
+    walljumpimpulsey: number = 180
+    walljumpimpulsex: number = 80
 
     // Input
     cooldowns: Record<string, Cooldown>
+    timers: Record<string, Timer>
     buffers: Record<string, Buffered>
     pressOnce: Record<string, Once>
 
@@ -69,7 +73,7 @@ export class Player extends GameObject {
             historyLen: 2,
             x,
             y,
-            xfriction: 200,
+            xfriction: 40,
             yfriction: 0,
             parent: this,
         })
@@ -87,6 +91,7 @@ export class Player extends GameObject {
             duckwalk: [34, 35, 36, 35, 34, 37, 38, 37],
             fromduckwalk: [],
             wallsliding: [32],
+            fromwallsliding: [],
             toidle: [2],
             fromidle: [2],
             idle: [3, 4, 3, 4, 3, 4, 3],
@@ -126,6 +131,11 @@ export class Player extends GameObject {
             jump: new Once(),
             roll: new Once(),
         }
+        this.timers = {
+            clearwalljumping: new Timer(200, () => {
+                this.states.walljumping = false
+            }),
+        }
 
         // Control states on animation end
         this.animationEndCallbacks['roll'] = () => {
@@ -142,7 +152,7 @@ export class Player extends GameObject {
         GravitySingleton.getInstance().register(this.hitbox)
         CameraFollowSingleton.getInstance().register(this.printbox)
 
-        this.on('collision', (side: string, hb: HitBox) => {
+        this.on('collision', (side: string, hb: HitBox, collider: HitBox) => {
             if (hb === this.standbox) {
                 if (side === 'top') {
                     if (this.states.jumping === true) {
@@ -156,10 +166,24 @@ export class Player extends GameObject {
                     }
                 }
                 return
-            }
-            if (side === 'bottom') {
-                this.states.onfloor = true
-                this.states.jumping = false
+            } else if (hb === this.hitbox) {
+                switch (side) {
+                    case 'bottom':
+                        this.states.onfloor = true
+                        this.states.jumping = false
+                        break
+                    case 'left':
+                    case 'right':
+                        if (collider.type === 'stop' && this.states.falling) {
+                            this.states.wallsliding = true
+                            this.states.headingLeft = !this.states.headingLeft
+                            if (this.states.walljumping) {
+                                this.states.walljumping = false
+                                this.timers['clearwalljumping'].clear()
+                            }
+                        }
+                        break
+                }
             }
         })
 
@@ -179,15 +203,25 @@ export class Player extends GameObject {
         Object.values(this.buffers).forEach((bf) => {
             bf.update()
         })
+        // Schedule something to happen N time after timer set
+        Object.values(this.timers).forEach((tm) => {
+            tm.update()
+        })
 
         this.handleInputs(inputHandler)
 
         this.handleAnimations()
 
+        if (this.states.wallsliding) {
+            this.physics.yfriction = 150
+        } else {
+            this.physics.yfriction = 0
+        }
+
         this.physics.update()
 
         // States reset
-        this.states.falling = this.physics.yspeed > 0 && !this.states.onfloor
+        this.states.falling = this.physics.yspeed >= 0 && !this.states.onfloor
         this.states.stand =
             this.states.onfloor &&
             !(
@@ -202,6 +236,7 @@ export class Player extends GameObject {
         if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
         this.states.duckByCollision = false
+        this.states.wallsliding = false
         /* Early headbump end
         if (this.states.headbumping && this.cooldowns['bumppain'].request()) {
             this.states.cantmove = false
@@ -228,11 +263,12 @@ export class Player extends GameObject {
         inputs.right = inputHandler.getBindingState('right') === 'down'
 
         const can_jump =
-            this.states.cantmove === false &&
-            this.states.jumping === false &&
-            this.states.duckByCollision === false &&
-            // retain onfloor some time before not flooring
-            this.buffers['coyotetime'].retain(this.states.onfloor) === true
+            this.states.wallsliding === true ||
+            (this.states.cantmove === false &&
+                this.states.jumping === false &&
+                this.states.duckByCollision === false &&
+                // retain onfloor some time before not flooring
+                this.buffers['coyotetime'].retain(this.states.onfloor) === true)
         const can_duck =
             this.states.cantmove === false &&
             this.states.onfloor === true &&
@@ -241,14 +277,38 @@ export class Player extends GameObject {
         const can_roll =
             this.states.cantmove === false &&
             this.states.running === true &&
+            this.states.wallsliding === false &&
             this.states.duck === false
         const can_move = this.states.cantmove === false
         const rolling_left = this.states.rolling && this.states.headingLeft
+        let walljumping_left =
+            this.states.walljumping && this.states.headingLeft
         const rolling_right = this.states.rolling && !this.states.headingLeft
+        let walljumping_right =
+            this.states.walljumping && !this.states.headingLeft
 
         // **************** JUMPING *********************
         if (this.buffers['jump'].request(inputs.up, can_jump)) {
-            this.physics.yspeed -= this.jumpingForce
+            this.physics.yspeed -= this.states.wallsliding
+                ? this.walljumpimpulsey
+                : this.jumpingForce
+
+            // WALLJUMPING ***************************
+            if (this.states.wallsliding) {
+                if (this.states.headingLeft) {
+                    this.physics.xspeed -= this.walljumpimpulsex
+                    this.states.headingLeft = false
+                    walljumping_left = true
+                } else {
+                    this.physics.xspeed += this.walljumpimpulsex
+                    this.states.headingLeft = true
+                    walljumping_right = true
+                }
+                this.states.walljumping = true
+                this.timers['clearwalljumping'].start()
+            }
+            // WALLJUMPING ***************************
+
             this.states.jumping = true
             this.states.rolling = false
         }
@@ -256,7 +316,11 @@ export class Player extends GameObject {
         // **************** RUN *********************
         this.states.running = false
         this.states.duckwalking = false
-        if ((inputs.left || rolling_left) && !rolling_right && can_move) {
+        if (
+            (inputs.left || rolling_left || walljumping_left) &&
+            can_move &&
+            !walljumping_right
+        ) {
             if (!this.states.duck && !this.states.rolling)
                 this.states.running = true
             this.states.duckwalking = this.states.duck
@@ -268,10 +332,13 @@ export class Player extends GameObject {
                   ? this.rollspeed
                   : this.runningspeed
             if (this.physics.xspeed > -speed)
-                this.physics.xspeed -= this.xacceleration
-        }
-
-        if ((inputs.right || rolling_right) && !rolling_left && can_move) {
+                this.physics.xspeed -= this.states.onfloor
+                    ? this.xacceleration
+                    : this.airxacceleration
+        } else if (
+            (inputs.right || rolling_right || walljumping_right) &&
+            can_move
+        ) {
             if (!this.states.duck && !this.states.rolling)
                 this.states.running = true
             this.states.duckwalking = this.states.duck
@@ -283,7 +350,9 @@ export class Player extends GameObject {
                   ? this.rollspeed
                   : this.runningspeed
             if (this.physics.xspeed < speed)
-                this.physics.xspeed += this.xacceleration
+                this.physics.xspeed += this.states.onfloor
+                    ? this.xacceleration
+                    : this.airxacceleration
         }
 
         this.states.running == !(inputs.right || inputs.left)
@@ -409,6 +478,12 @@ export class Player extends GameObject {
                 id: 'duck',
                 cancel: true,
                 animations: ['from' + curAni, 'duck'],
+            })
+        } else if (this.states.wallsliding) {
+            queueAnimations({
+                id: 'wallsliding',
+                cancel: true,
+                animations: ['wallsliding'],
             })
         } else if (this.states.falling) {
             if (this.states.running) {
