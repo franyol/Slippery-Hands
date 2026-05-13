@@ -28,7 +28,6 @@ export class TestState extends State {
             })
         )
 
-        // First obstacle (must jump)
         this.register(
             new Block({
                 x: 200,
@@ -50,11 +49,10 @@ export class TestState extends State {
             })
         )
 
-        // Small gap for rolling
         this.register(
             new Block({
                 x: 400,
-                y: 1600,
+                y: 1580,
                 w: 200,
                 h: 100,
                 moving: false,

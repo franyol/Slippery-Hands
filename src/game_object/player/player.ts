@@ -24,6 +24,9 @@ export class Player extends GameObject {
     printbox: HitBox
     sprite: Sprite
 
+    climbPlatformy: number
+    climbPlatformx: number
+
     states = {
         stand: false,
         idle: false,
@@ -40,6 +43,8 @@ export class Player extends GameObject {
         duck: false,
         duckwalking: false,
         duckByCollision: false,
+        edgeclimbstart: false,
+        edgeclimbend: false,
     }
 
     jumpcount: number = 0
@@ -114,6 +119,9 @@ export class Player extends GameObject {
             fromrun: [8],
             roll: [25, 26, 27, 28, 29, 30],
             fromroll: [],
+            edgeclimbstart: [66, 67, 68],
+            edgeclimbend: [69, 70],
+            fromedgeclimbend: [],
         })
         this.sprite.setCurAnimation('stand')
 
@@ -140,10 +148,28 @@ export class Player extends GameObject {
         // Control states on animation end
         this.animationEndCallbacks['roll'] = () => {
             this.states.rolling = false
+            this.hitbox._y = 0
+            this.hitbox.h = 64
         }
         this.animationEndCallbacks['bumppain'] = () => {
             this.states.headbumping = false
             this.states.cantmove = false
+        }
+        this.animationEndCallbacks['edgeclimbstart'] = () => {
+            this.states.edgeclimbstart = false
+            this.states.edgeclimbend = true
+            // TP to top of the platform
+            this.physics.y = this.climbPlatformy - 70
+            this.physics.x += this.states.headingLeft ? -8 : 8
+            this.hitbox._y = 32
+            this.hitbox.h = 32
+            CollidedSingleton.getInstance().register(this.hitbox)
+        }
+        this.animationEndCallbacks['edgeclimbend'] = () => {
+            this.states.edgeclimbend = false
+            this.states.cantmove = false
+            this.hitbox._y = 0
+            this.hitbox.h = 64
         }
 
         InBoundsSingleton.getInstance().register(this.hitbox)
@@ -175,11 +201,32 @@ export class Player extends GameObject {
                     case 'left':
                     case 'right':
                         if (collider.type === 'stop' && this.states.falling) {
-                            this.states.wallsliding = true
-                            this.states.headingLeft = !this.states.headingLeft
-                            if (this.states.walljumping) {
-                                this.states.walljumping = false
-                                this.timers['clearwalljumping'].clear()
+                            if (
+                                this.hitbox.y + this.hitbox.h / 2 <
+                                collider.y
+                            ) {
+                                this.states.edgeclimbstart = true
+                                this.states.cantmove = true
+                                this.climbPlatformy = collider.y
+                                this.climbPlatformx = collider.x
+                                if (this.states.headingLeft) {
+                                    this.climbPlatformx =
+                                        collider.x + collider.w
+                                } else {
+                                    this.climbPlatformx =
+                                        collider.x - this.printbox.w
+                                }
+                                CollidedSingleton.getInstance().deregister(
+                                    this.hitbox
+                                )
+                            } else {
+                                this.states.wallsliding = true
+                                this.states.headingLeft =
+                                    !this.states.headingLeft
+                                if (this.states.walljumping) {
+                                    this.states.walljumping = false
+                                    this.timers['clearwalljumping'].clear()
+                                }
                             }
                         }
                         break
@@ -220,6 +267,14 @@ export class Player extends GameObject {
 
         this.physics.update()
 
+        // Force position on edgeclimb
+        if (this.states.edgeclimbstart) {
+            this.physics.y = this.climbPlatformy - 36
+            this.physics.x = this.states.headingLeft
+                ? this.climbPlatformx - 25
+                : this.climbPlatformx + 25
+        }
+
         // States reset
         this.states.falling = this.physics.yspeed >= 0 && !this.states.onfloor
         this.states.stand =
@@ -231,7 +286,9 @@ export class Player extends GameObject {
                 this.states.rolling ||
                 this.states.headbumping ||
                 this.states.walljumping ||
-                this.states.wallsliding
+                this.states.wallsliding ||
+                this.states.edgeclimbstart ||
+                this.states.edgeclimbend
             )
         if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
@@ -319,7 +376,8 @@ export class Player extends GameObject {
         if (
             (inputs.left || rolling_left || walljumping_left) &&
             can_move &&
-            !walljumping_right
+            !walljumping_right &&
+            !rolling_right
         ) {
             if (!this.states.duck && !this.states.rolling)
                 this.states.running = true
@@ -368,7 +426,8 @@ export class Player extends GameObject {
             // If collision on top, forces ducking
             // Lower the state to check the collision again
             this.states.duckByCollision = false
-        } else if (!this.states.rolling) {
+        } else if (!this.states.rolling && !this.states.edgeclimbend) {
+            // Stand up
             this.states.duck = false
             this.hitbox._y = 0
             this.hitbox.h = 64
@@ -447,6 +506,12 @@ export class Player extends GameObject {
                     })
                 }
             }
+        } else if (this.states.edgeclimbstart || this.states.edgeclimbend) {
+            queueAnimations({
+                id: 'edgeclimbstart',
+                cancel: true,
+                animations: ['edgeclimbstart', 'edgeclimbend'],
+            })
         } else if (this.states.headbumping) {
             if (!this.states.onfloor && !(curAni === 'bumppain')) {
                 queueAnimations({
