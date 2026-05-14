@@ -11,10 +11,10 @@ export class Gravity implements Environment {
     update() {
         const dt = GameSingleton.getInstance().dt
         this.objects.map((o) => {
-            if (o.parent.yspeed < 80) {
-                o.parent.yspeed += (100 * dt) / 100
-            } else if (o.parent.yspeed >= 100) {
-                o.parent.yspeed -= (100 * dt) / 100
+            if (o.parent.yspeed < 800) {
+                o.parent.yspeed += 10 * dt
+            } else if (o.parent.yspeed >= 1000) {
+                o.parent.yspeed -= 10 * dt
             }
         })
     }

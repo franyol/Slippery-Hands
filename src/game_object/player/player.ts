@@ -53,15 +53,15 @@ export class Player extends GameObject {
     animationEndCallbacks: Record<string, () => void> = {}
     animId: string = ''
 
-    runningspeed: number = 50
-    xacceleration: number = this.runningspeed / 9
-    airxacceleration: number = this.runningspeed / 12
-    duckspeed: number = 20
-    rollspeed: number = 70
-    jumpingForce: number = 210
+    runningspeed: number = 400
+    xacceleration: number = this.runningspeed / 5
+    airxacceleration: number = this.runningspeed / 8
+    duckspeed: number = 200
+    rollspeed: number = 700
+    jumpingForce: number = 2100
     idleTime: number = 5000
-    walljumpimpulsey: number = 180
-    walljumpimpulsex: number = 80
+    walljumpimpulsey: number = 1800
+    walljumpimpulsex: number = 800
 
     // Input
     cooldowns: Record<string, Cooldown>
@@ -78,7 +78,7 @@ export class Player extends GameObject {
             historyLen: 2,
             x,
             y,
-            xfriction: 40,
+            xfriction: 15,
             yfriction: 0,
             parent: this,
         })
@@ -148,8 +148,7 @@ export class Player extends GameObject {
         // Control states on animation end
         this.animationEndCallbacks['roll'] = () => {
             this.states.rolling = false
-            this.hitbox._y = 0
-            this.hitbox.h = 64
+            this.states.duckByCollision = true
         }
         this.animationEndCallbacks['bumppain'] = () => {
             this.states.headbumping = false
@@ -181,19 +180,22 @@ export class Player extends GameObject {
         this.on('collision', (side: string, hb: HitBox, collider: HitBox) => {
             if (hb === this.standbox) {
                 if (side === 'top') {
-                    if (this.states.jumping === true) {
-                        this.states.headbumping = true
-                        this.states.cantmove = true
-                        this.states.falling = true
-                        this.states.jumping = false
-                        this.cooldowns['bumppain'].request()
-                    } else {
-                        this.states.duckByCollision = true
-                    }
+                    if (!this.states.jumping) this.states.duckByCollision = true
                 }
                 return
             } else if (hb === this.hitbox) {
                 switch (side) {
+                    case 'top':
+                        if (this.states.jumping === true) {
+                            this.states.headbumping = true
+                            this.states.cantmove = true
+                            this.states.falling = true
+                            this.states.jumping = false
+                            this.cooldowns['bumppain'].request()
+                        } else {
+                            this.states.duckByCollision = true
+                        }
+                        break
                     case 'bottom':
                         this.states.onfloor = true
                         this.states.jumping = false
@@ -363,6 +365,8 @@ export class Player extends GameObject {
                 }
                 this.states.walljumping = true
                 this.timers['clearwalljumping'].start()
+                this.physics.yfriction = 0
+                this.states.wallsliding = false
             }
             // WALLJUMPING ***************************
 

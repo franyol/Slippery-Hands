@@ -95,26 +95,12 @@ export class Physics {
     }
 
     update() {
-        const dt = GameSingleton.getInstance().dt
-        this.x += (this.xspeed * dt) / 100
-        this.y += (this.yspeed * dt) / 100
+        const dt = GameSingleton.getInstance().dt / 1000
+        this.x += this.xspeed * dt
+        this.y += this.yspeed * dt
 
-        if (this.xfriction !== 0) {
-            const f = (this.xfriction * dt) / 100
-            if (Math.abs(this.xspeed) < f) {
-                this.xspeed = 0
-            } else {
-                this.xspeed += this.xspeed > 0 ? -f : f
-            }
-        }
-        if (this.yfriction !== 0) {
-            const f = (this.yfriction * dt) / 100
-            if (Math.abs(this.yspeed) < f) {
-                this.yspeed = 0
-            } else {
-                this.yspeed += this.yspeed > 0 ? -f : f
-            }
-        }
+        this.xspeed *= Math.exp(-this.xfriction * dt)
+        this.yspeed *= Math.exp(-this.yfriction * dt)
     }
 
     get x(): number {
