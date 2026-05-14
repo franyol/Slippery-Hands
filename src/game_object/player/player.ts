@@ -45,9 +45,16 @@ export class Player extends GameObject {
         duckByCollision: false,
         edgeclimbstart: false,
         edgeclimbend: false,
+        standshootstart: false,
+        standshootend: false,
+        duckshootstart: false,
+        duckshootend: false,
+        wallshootstart: false,
+        wallshootend: false,
     }
 
     jumpcount: number = 0
+    bulletcount: number = 2
 
     animationQueue: string[]
     animationEndCallbacks: Record<string, () => void> = {}
@@ -122,12 +129,26 @@ export class Player extends GameObject {
             edgeclimbstart: [66, 67, 68],
             edgeclimbend: [69, 70],
             fromedgeclimbend: [],
+            standshootstart: [39, 40, 41],
+            standshootend: [42, 43, 44],
+            fromstandshootend: [40, 39],
+            standshootenddrop: [46, 47],
+            fromstandshootenddrop: [48],
+            duckshootstart: [49, 50],
+            duckshootend: [51, 52, 53],
+            fromduckshootend: [49],
+            duckshootenddrop: [55, 56],
+            fromduckshootenddrop: [57],
+            wallshootstart: [58, 59],
+            wallshootend: [60, 61],
+            fromwallshootend: [58],
+            wallshootenddrop: [63, 64],
+            fromwallshootenddrop: [65],
         })
         this.sprite.setCurAnimation('stand')
 
         this.cooldowns = {
             rolling: new Cooldown(1200),
-            bumppain: new Cooldown(500),
             stopwalljump: new Cooldown(100),
             regainwalljumpctl: new Cooldown(300),
         }
@@ -138,6 +159,7 @@ export class Player extends GameObject {
         this.pressOnce = {
             jump: new Once(),
             roll: new Once(),
+            shoot: new Once(),
         }
         this.timers = {
             clearwalljumping: new Timer(200, () => {
@@ -170,6 +192,51 @@ export class Player extends GameObject {
             this.hitbox._y = 0
             this.hitbox.h = 64
         }
+        this.animationEndCallbacks['standshootstart'] = () => {
+            this.states.standshootend = true
+            this.bulletcount -= 1
+        }
+        this.animationEndCallbacks['standshootend'] = () => {
+            this.states.standshootend = false
+            this.states.standshootstart = false
+            this.states.cantmove = false
+        }
+        this.animationEndCallbacks['standshootenddrop'] = () => {
+            this.states.standshootend = false
+            this.states.standshootstart = false
+            this.states.cantmove = false
+            this.bulletcount = 2
+        }
+        this.animationEndCallbacks['duckshootstart'] = () => {
+            this.states.duckshootend = true
+            this.bulletcount -= 1
+        }
+        this.animationEndCallbacks['duckshootend'] = () => {
+            this.states.duckshootend = false
+            this.states.duckshootstart = false
+            this.states.cantmove = false
+        }
+        this.animationEndCallbacks['duckshootenddrop'] = () => {
+            this.states.duckshootend = false
+            this.states.duckshootstart = false
+            this.states.cantmove = false
+            this.bulletcount = 2
+        }
+        this.animationEndCallbacks['wallshootstart'] = () => {
+            this.states.wallshootend = true
+            this.bulletcount -= 1
+        }
+        this.animationEndCallbacks['wallshootend'] = () => {
+            this.states.wallshootend = false
+            this.states.wallshootstart = false
+            this.states.cantmove = false
+        }
+        this.animationEndCallbacks['wallshootenddrop'] = () => {
+            this.states.wallshootend = false
+            this.states.wallshootstart = false
+            this.states.cantmove = false
+            this.bulletcount = 2
+        }
 
         InBoundsSingleton.getInstance().register(this.hitbox)
         CollidedSingleton.getInstance().register(this.hitbox)
@@ -191,7 +258,8 @@ export class Player extends GameObject {
                             this.states.cantmove = true
                             this.states.falling = true
                             this.states.jumping = false
-                            this.cooldowns['bumppain'].request()
+                            this.hitbox._y = 32
+                            this.hitbox.h = 32
                         } else {
                             this.states.duckByCollision = true
                         }
@@ -261,7 +329,7 @@ export class Player extends GameObject {
 
         this.handleAnimations()
 
-        if (this.states.wallsliding) {
+        if (this.states.wallsliding || this.states.wallshootstart) {
             this.physics.yfriction = 150
         } else {
             this.physics.yfriction = 0
@@ -296,16 +364,12 @@ export class Player extends GameObject {
         this.states.onfloor = false
         this.states.duckByCollision = false
         this.states.wallsliding = false
-        /* Early headbump end
-        if (this.states.headbumping && this.cooldowns['bumppain'].request()) {
-            this.states.cantmove = false
-        }
-        */
     }
 
     handleInputs(inputHandler: InputHandler) {
         // Handle inputs
         const inputs = {
+            shoot: false,
             up: false,
             roll: false,
             down: false,
@@ -313,6 +377,9 @@ export class Player extends GameObject {
             right: false,
         }
 
+        inputs.shoot = this.pressOnce['shoot'].request(
+            inputHandler.getBindingState('shoot') === 'down'
+        )
         inputs.up = this.pressOnce['jump'].request(
             inputHandler.getBindingState('jump') === 'down'
         )
@@ -332,12 +399,22 @@ export class Player extends GameObject {
             this.states.cantmove === false &&
             this.states.onfloor === true &&
             this.states.running === false &&
+            this.states.jumping === false &&
             this.states.rolling === false
         const can_roll =
             this.states.cantmove === false &&
             this.states.running === true &&
             this.states.wallsliding === false &&
             this.states.duck === false
+        const can_shoot =
+            this.states.cantmove === false &&
+            this.states.rolling === false &&
+            this.bulletcount > 0
+        const can_standup =
+            this.states.rolling === false &&
+            this.states.edgeclimbend === false &&
+            this.states.headbumping === false &&
+            this.states.duckshootstart === false
         const can_move = this.states.cantmove === false
         const rolling_left = this.states.rolling && this.states.headingLeft
         let walljumping_left =
@@ -372,6 +449,7 @@ export class Player extends GameObject {
 
             this.states.jumping = true
             this.states.rolling = false
+            this.states.duck = false
         }
 
         // **************** RUN *********************
@@ -420,18 +498,16 @@ export class Player extends GameObject {
         this.states.running == !(inputs.right || inputs.left)
 
         // **************** ROLL AND DUCK *********************
-        if (inputs.down || this.states.duckByCollision) {
-            if (can_duck) {
-                this.states.duck = true
-                this.hitbox._y = 32
-                this.hitbox.h = 32
-            }
+        if ((inputs.down || this.states.duckByCollision) && can_duck) {
+            this.states.duck = true
+            this.hitbox._y = 32
+            this.hitbox.h = 32
         } else if (this.states.duckByCollision) {
             // If collision on top, forces ducking
             // Lower the state to check the collision again
             this.states.duckByCollision = false
-        } else if (!this.states.rolling && !this.states.edgeclimbend) {
-            // Stand up
+        } else if (can_standup) {
+            // Stand up restore hitbox
             this.states.duck = false
             this.hitbox._y = 0
             this.hitbox.h = 64
@@ -441,6 +517,18 @@ export class Player extends GameObject {
             this.states.rolling = true
             this.hitbox._y = 32
             this.hitbox.h = 32
+        }
+
+        // **************** SHOOTING *********************
+        if (inputs.shoot && can_shoot) {
+            this.states.cantmove = true
+            if (this.states.wallsliding) {
+                this.states.wallshootstart = true
+            } else if (this.states.duck) {
+                this.states.duckshootstart = true
+            } else {
+                this.states.standshootstart = true
+            }
         }
     }
 
@@ -485,7 +573,40 @@ export class Player extends GameObject {
             }
         }
 
-        if (this.states.stand) {
+        if (this.states.standshootstart) {
+            queueAnimations({
+                id: 'stanshoot',
+                cancel: true,
+                animations: [
+                    'standshootstart',
+                    this.bulletcount === 1
+                        ? 'standshootenddrop'
+                        : 'standshootend',
+                ],
+            })
+        } else if (this.states.duckshootstart) {
+            queueAnimations({
+                id: 'duckshoot',
+                cancel: true,
+                animations: [
+                    'duckshootstart',
+                    this.bulletcount === 1
+                        ? 'duckshootenddrop'
+                        : 'duckshootend',
+                ],
+            })
+        } else if (this.states.wallshootstart) {
+            queueAnimations({
+                id: 'wallshoot',
+                cancel: true,
+                animations: [
+                    'wallshootstart',
+                    this.bulletcount === 1
+                        ? 'wallshootenddrop'
+                        : 'wallshootend',
+                ],
+            })
+        } else if (this.states.stand) {
             if (!this.states.idle) {
                 queueAnimations({
                     id: 'prepare',

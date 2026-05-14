@@ -35,8 +35,12 @@ export class InputHandler {
         }
 
         this.bindings = {
+            shoot: {
+                keybinding: 'h',
+                virtual: null,
+            },
             jump: {
-                keybinding: ' ',
+                keybinding: 'j',
                 virtual: new Button(
                     game,
                     170,

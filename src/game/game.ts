@@ -40,7 +40,7 @@ export class Game {
         // UI
         if (this.inputHandler.showVirtual) {
             Object.values(this.inputHandler.bindings).forEach((binding) => {
-                binding.virtual.update()
+                binding.virtual?.update()
             })
             Object.values(this.inputHandler.joysticks).forEach((joy) => {
                 joy.update()
@@ -92,7 +92,7 @@ export class Game {
         }
         if (this.inputHandler.showVirtual) {
             Object.values(this.inputHandler.bindings).forEach((binding) => {
-                binding.virtual.render()
+                binding.virtual?.render()
             })
             Object.values(this.inputHandler.joysticks).forEach((joy) => {
                 joy.render()
