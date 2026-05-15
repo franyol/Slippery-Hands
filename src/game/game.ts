@@ -67,7 +67,7 @@ export class Game {
             -this.camy * (this.canvas.height / this.camh)
         )
 
-        ctx.fillStyle = 'yellow'
+        ctx.fillStyle = '#e6c155'
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
         this.fsm.render()
 

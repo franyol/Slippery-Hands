@@ -170,7 +170,8 @@ export class Sprite {
         w: number,
         h: number,
         flipHorizontal: boolean = false,
-        flipVertical: boolean = false
+        flipVertical: boolean = false,
+        rotate_rad?: number
     ) {
         const ctx = this.ui
             ? GameSingleton.getInstance().uicanvas.getContext('2d')
@@ -185,6 +186,8 @@ export class Sprite {
 
             // Apply flipping transformations
             ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1)
+
+            if (rotate_rad) ctx.rotate(rotate_rad)
 
             // Draw the image at its transformed position
             ctx.drawImage(

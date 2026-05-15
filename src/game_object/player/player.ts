@@ -10,6 +10,7 @@ import { CameraFollowSingleton } from '../environments/cam_follow'
 import { CollidedSingleton } from '../environments/collisions'
 import { GravitySingleton } from '../environments/gravity'
 import { InBoundsSingleton } from '../environments/out_of_bouds'
+import { Shot } from '../shot/shot'
 
 const spritedir = '../../../static/assets/images/main-character/'
 
@@ -195,6 +196,21 @@ export class Player extends GameObject {
         this.animationEndCallbacks['standshootstart'] = () => {
             this.states.standshootend = true
             this.bulletcount -= 1
+
+            this.game.fsm
+                .getCurState()
+                .register(
+                    new Shot(
+                        this.printbox.x +
+                            (this.states.headingLeft ? 0 : this.printbox.w),
+                        this.hitbox.y - 2,
+                        this.printbox.x +
+                            (this.states.headingLeft
+                                ? -500
+                                : this.printbox.w + 500),
+                        this.hitbox.y - 2
+                    )
+                )
         }
         this.animationEndCallbacks['standshootend'] = () => {
             this.states.standshootend = false
@@ -210,6 +226,21 @@ export class Player extends GameObject {
         this.animationEndCallbacks['duckshootstart'] = () => {
             this.states.duckshootend = true
             this.bulletcount -= 1
+
+            this.game.fsm
+                .getCurState()
+                .register(
+                    new Shot(
+                        this.printbox.x +
+                            (this.states.headingLeft ? 0 : this.printbox.w),
+                        this.hitbox.y - 10,
+                        this.printbox.x +
+                            (this.states.headingLeft
+                                ? -500
+                                : this.printbox.w + 500),
+                        this.hitbox.y - 10
+                    )
+                )
         }
         this.animationEndCallbacks['duckshootend'] = () => {
             this.states.duckshootend = false
@@ -225,6 +256,21 @@ export class Player extends GameObject {
         this.animationEndCallbacks['wallshootstart'] = () => {
             this.states.wallshootend = true
             this.bulletcount -= 1
+
+            this.game.fsm
+                .getCurState()
+                .register(
+                    new Shot(
+                        this.printbox.x +
+                            (this.states.headingLeft ? 0 : this.printbox.w),
+                        this.hitbox.y - 2,
+                        this.printbox.x +
+                            (this.states.headingLeft
+                                ? -500
+                                : this.printbox.w + 500),
+                        this.hitbox.y - 2
+                    )
+                )
         }
         this.animationEndCallbacks['wallshootend'] = () => {
             this.states.wallshootend = false
