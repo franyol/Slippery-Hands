@@ -115,13 +115,13 @@ export class Button extends GameObject {
         if (this.placeholder) return
 
         if (this.hitbox) {
-            this.sprite.render(
-                this.hitbox.x,
-                this.hitbox.y,
-                this.hitbox.w,
-                this.hitbox.h,
-                false
-            )
+            this.sprite.render({
+                x: this.hitbox.x,
+                y: this.hitbox.y,
+                w: this.hitbox.w,
+                h: this.hitbox.h,
+                flipHorizontal: false,
+            })
         }
     }
 }

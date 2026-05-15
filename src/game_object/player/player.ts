@@ -291,6 +291,7 @@ export class Player extends GameObject {
         CameraFollowSingleton.getInstance().register(this.printbox)
 
         this.on('collision', (side: string, hb: HitBox, collider: HitBox) => {
+            if (collider === this.hitbox || collider === this.standbox) return
             if (hb === this.standbox) {
                 if (side === 'top') {
                     if (!this.states.jumping) this.states.duckByCollision = true
@@ -404,7 +405,8 @@ export class Player extends GameObject {
                 this.states.walljumping ||
                 this.states.wallsliding ||
                 this.states.edgeclimbstart ||
-                this.states.edgeclimbend
+                this.states.edgeclimbend ||
+                this.states.standshootstart
             )
         if (!this.states.stand) this.states.idle = false
         this.states.onfloor = false
@@ -768,13 +770,13 @@ export class Player extends GameObject {
 
     render() {
         if (this.printbox) {
-            this.sprite.render(
-                this.printbox.x,
-                this.printbox.y,
-                this.printbox.w,
-                this.printbox.h,
-                this.states.headingLeft
-            )
+            this.sprite.render({
+                x: this.printbox.x,
+                y: this.printbox.y,
+                w: this.printbox.w,
+                h: this.printbox.h,
+                flipHorizontal: this.states.headingLeft,
+            })
         }
         this.hitbox.render()
     }

@@ -13,6 +13,21 @@ type ImageRegister = {
     instances: number
 }
 
+type RenderOptions = {
+    x: number
+    y: number
+    w: number
+    h: number
+
+    flipHorizontal?: boolean
+    flipVertical?: boolean
+
+    rotate_rad?: number
+
+    pivotx?: number
+    pivoty?: number
+}
+
 export class Sprite {
     static loadedImages: Record<string, ImageRegister> = {}
     image: HTMLImageElement
@@ -164,15 +179,18 @@ export class Sprite {
         return false
     }
 
-    render(
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        flipHorizontal: boolean = false,
-        flipVertical: boolean = false,
-        rotate_rad?: number
-    ) {
+    render({
+        x,
+        y,
+        w,
+        h,
+        flipHorizontal = false,
+        flipVertical = false,
+        rotate_rad,
+
+        pivotx,
+        pivoty,
+    }: RenderOptions) {
         const ctx = this.ui
             ? GameSingleton.getInstance().uicanvas.getContext('2d')
             : GameSingleton.getInstance().canvas.getContext('2d')
@@ -181,13 +199,16 @@ export class Sprite {
         if (frame && this.isReady()) {
             ctx.save() // Save the current state of the canvas
 
-            // Translate to the center of the image for proper flipping
-            ctx.translate(x + w / 2, y + h / 2)
+            if (pivoty === undefined) pivoty = h / 2
+            if (pivotx === undefined) pivotx = w / 2
+
+            ctx.translate(x + pivotx, y + pivoty)
+
+            // Apply rotation
+            if (rotate_rad) ctx.rotate(rotate_rad)
 
             // Apply flipping transformations
             ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1)
-
-            if (rotate_rad) ctx.rotate(rotate_rad)
 
             // Draw the image at its transformed position
             ctx.drawImage(
@@ -196,8 +217,8 @@ export class Sprite {
                 frame.y,
                 frame.w,
                 frame.h,
-                -w / 2,
-                -h / 2,
+                -pivotx,
+                -pivoty,
                 w,
                 h
             )

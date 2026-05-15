@@ -183,19 +183,19 @@ export class Joystick extends GameObject {
             return
         }
 
-        this.sprite.render(
-            this.initial.x,
-            this.initial.y,
-            this.hitbox.w,
-            this.hitbox.h,
-            false
-        )
-        this.spritemove.render(
-            this.current.x,
-            this.current.y,
-            this.hitbox.w,
-            this.hitbox.h,
-            false
-        )
+        this.sprite.render({
+            x: this.initial.x,
+            y: this.initial.y,
+            w: this.hitbox.w,
+            h: this.hitbox.h,
+            flipHorizontal: false,
+        })
+        this.spritemove.render({
+            x: this.current.x,
+            y: this.current.y,
+            w: this.hitbox.w,
+            h: this.hitbox.h,
+            flipHorizontal: false,
+        })
     }
 }
