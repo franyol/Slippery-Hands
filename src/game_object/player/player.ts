@@ -11,11 +11,12 @@ import { CollidedSingleton } from '../environments/collisions'
 import { GravitySingleton } from '../environments/gravity'
 import { InBoundsSingleton } from '../environments/out_of_bouds'
 import { Shot } from '../shot/shot'
+import { Gun } from '../gun/gun'
 
 const spritedir = '../../../static/assets/images/main-character/'
 
 export class Player extends GameObject {
-    uuid: number = 0
+    uuid: number = 64
     prio: number = 0
     game: Game
 
@@ -52,6 +53,7 @@ export class Player extends GameObject {
         duckshootend: false,
         wallshootstart: false,
         wallshootend: false,
+        cangrabgun: false,
     }
 
     jumpcount: number = 0
@@ -95,6 +97,7 @@ export class Player extends GameObject {
         this.standbox = new HitBox(this.physics, 13, 0, 38, 64, 'virtual', 0)
         this.animationQueue = []
         this.sprite.loadAnimations({
+            empty: [],
             tostand: [5],
             stand: [0, 1],
             fromstand: [5],
@@ -166,6 +169,9 @@ export class Player extends GameObject {
             clearwalljumping: new Timer(200, () => {
                 this.states.walljumping = false
             }),
+            cangrabgun: new Timer(100, () => {
+                this.states.cangrabgun = true
+            }),
         }
 
         // Control states on animation end
@@ -221,7 +227,8 @@ export class Player extends GameObject {
             this.states.standshootend = false
             this.states.standshootstart = false
             this.states.cantmove = false
-            this.bulletcount = 2
+
+            this.drop_gun()
         }
         this.animationEndCallbacks['duckshootstart'] = () => {
             this.states.duckshootend = true
@@ -251,7 +258,8 @@ export class Player extends GameObject {
             this.states.duckshootend = false
             this.states.duckshootstart = false
             this.states.cantmove = false
-            this.bulletcount = 2
+
+            this.drop_gun()
         }
         this.animationEndCallbacks['wallshootstart'] = () => {
             this.states.wallshootend = true
@@ -281,7 +289,8 @@ export class Player extends GameObject {
             this.states.wallshootend = false
             this.states.wallshootstart = false
             this.states.cantmove = false
-            this.bulletcount = 2
+
+            this.drop_gun()
         }
 
         InBoundsSingleton.getInstance().register(this.hitbox)
@@ -290,14 +299,22 @@ export class Player extends GameObject {
         GravitySingleton.getInstance().register(this.hitbox)
         CameraFollowSingleton.getInstance().register(this.printbox)
 
+        this.on('grab_gun', (gun: Gun) => {
+            if (!this.states.cangrabgun) return
+            gun.destroy()
+
+            // Refill bullets
+            this.bulletcount = 2
+        })
+
         this.on('collision', (side: string, hb: HitBox, collider: HitBox) => {
             if (collider === this.hitbox || collider === this.standbox) return
-            if (hb === this.standbox) {
+            if (hb === this.standbox && collider.type === 'stop') {
                 if (side === 'top') {
                     if (!this.states.jumping) this.states.duckByCollision = true
                 }
                 return
-            } else if (hb === this.hitbox) {
+            } else if (hb === this.hitbox && collider.type === 'stop') {
                 switch (side) {
                     case 'top':
                         if (this.states.jumping === true) {
@@ -630,6 +647,7 @@ export class Player extends GameObject {
                     this.bulletcount === 1
                         ? 'standshootenddrop'
                         : 'standshootend',
+                    'empty',
                 ],
             })
         } else if (this.states.duckshootstart) {
@@ -641,6 +659,7 @@ export class Player extends GameObject {
                     this.bulletcount === 1
                         ? 'duckshootenddrop'
                         : 'duckshootend',
+                    'empty',
                 ],
             })
         } else if (this.states.wallshootstart) {
@@ -652,6 +671,7 @@ export class Player extends GameObject {
                     this.bulletcount === 1
                         ? 'wallshootenddrop'
                         : 'wallshootend',
+                    'empty',
                 ],
             })
         } else if (this.states.stand) {
@@ -779,5 +799,16 @@ export class Player extends GameObject {
             })
         }
         this.hitbox.render()
+    }
+
+    drop_gun() {
+        const xspeed = this.states.headingLeft ? 400 : -400
+        // Since the gun will be appearing inside the player hitbox,
+        // use a timer to let the player grab it back
+        this.states.cangrabgun = false
+        this.timers['cangrabgun'].start()
+        this.game.fsm
+            .getCurState()
+            .register(new Gun(this.hitbox.x, this.hitbox.y, xspeed, -2400))
     }
 }

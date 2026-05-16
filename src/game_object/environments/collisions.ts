@@ -204,40 +204,29 @@ export class Collided implements Environment {
                 case 'standard':
                 case 'virtual':
                     hb.colliders.map((collider) => {
-                        const x_1 = hb.getx(1)
-                        const y_1 = hb.gety(1)
                         let side = ''
-                        if (x_1 + hb.w <= collider.x) {
-                            side = 'right'
-                        } else if (x_1 >= collider.x + collider.w) {
-                            side = 'left'
-                        } else if (y_1 + hb.h <= collider.y) {
-                            side = 'bottom'
-                        } else if (y_1 >= collider.y + collider.h) {
-                            side = 'top'
-                        } else {
-                            // overlap case
-                            const overlapLeft = x_1 + hb.w - collider.x
-                            const overlapRight = collider.x + collider.w - x_1
-                            const overlapTop = y_1 + hb.h - collider.y
-                            const overlapBottom = collider.y + collider.h - y_1
-                            const minOverlap = Math.min(
-                                overlapLeft,
-                                overlapRight,
-                                overlapTop,
-                                overlapBottom
-                            )
+                        // overlap case
+                        const overlapLeft = hb.x + hb.w - collider.x
+                        const overlapRight = collider.x + collider.w - hb.x
+                        const overlapTop = hb.y + hb.h - collider.y
+                        const overlapBottom = collider.y + collider.h - hb.y
+                        const minOverlap = Math.min(
+                            overlapLeft,
+                            overlapRight,
+                            overlapTop,
+                            overlapBottom
+                        )
 
-                            if (minOverlap === overlapLeft) {
-                                side = 'right'
-                            } else if (minOverlap === overlapRight) {
-                                side = 'left'
-                            } else if (minOverlap === overlapTop) {
-                                side = 'bottom'
-                            } else {
-                                side = 'top'
-                            }
+                        if (minOverlap === overlapLeft) {
+                            side = 'right'
+                        } else if (minOverlap === overlapRight) {
+                            side = 'left'
+                        } else if (minOverlap === overlapTop) {
+                            side = 'bottom'
+                        } else {
+                            side = 'top'
                         }
+
                         if (hb.type !== 'virtual' && collider.type === 'stop') {
                             switch (side) {
                                 case 'right':

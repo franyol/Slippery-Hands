@@ -70,16 +70,17 @@ export class Sprite {
 
     private loadImage(imgDir: string): void {
         this.image.src = imgDir
+
+        if (imgDir in Sprite.loadedImages) {
+            this.image = Sprite.loadedImages[imgDir].image
+            Sprite.loadedImages[imgDir].instances++
+            return
+        }
         this.image.onload = () => {
             this.imgLoaded = true
-            if (imgDir in Sprite.loadedImages) {
-                this.image = Sprite.loadedImages[imgDir].image
-                Sprite.loadedImages[imgDir].instances++
-            } else {
-                Sprite.loadedImages[imgDir] = {
-                    image: this.image,
-                    instances: 0,
-                }
+            Sprite.loadedImages[imgDir] = {
+                image: this.image,
+                instances: 0,
             }
         }
     }

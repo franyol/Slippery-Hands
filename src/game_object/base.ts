@@ -44,6 +44,7 @@ export abstract class GameObject {
 
     abstract update(): void
     abstract render(): void
+    //abstract destroy(): void
 }
 
 export class Physics {
@@ -96,6 +97,8 @@ export class Physics {
 
     update() {
         const dt = GameSingleton.getInstance().dt / 1000
+        this.recordHistory()
+
         this.x += this.xspeed * dt
         this.y += this.yspeed * dt
 
