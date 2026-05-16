@@ -3,6 +3,7 @@ import { Sprite } from '../../visual/sprite'
 import { GameObject, HitBox, Physics } from '../base'
 import { CollidedSingleton } from '../environments/collisions'
 import { GravitySingleton } from '../environments/gravity'
+import { InBoundsSingleton } from '../environments/out_of_bouds'
 
 const spritedir = '../../../static/assets/images/gun/'
 
@@ -79,7 +80,7 @@ export class Gun extends GameObject {
             }
         )
 
-        //InBoundsSingleton.getInstance().register(this.hitbox)
+        InBoundsSingleton.getInstance().register(this.hitbox)
         CollidedSingleton.getInstance().register(this.hitbox)
         GravitySingleton.getInstance().register(this.hitbox)
     }
