@@ -46,7 +46,7 @@ export class Shot extends GameObject {
         this.printbox = new HitBox(this.physics, 0, 0, length, 32, 'line', 0)
         this.hitbox = new HitBox(this.physics, 0, 16, dest_x, dest_y, 'line', 0)
 
-        this.sprite.loadAnimations({
+        this.sprite.loadAnimations('shot', {
             main: [0, 1, 2, 3, 4, 5, 6, 7],
         })
 

@@ -30,6 +30,8 @@ type RenderOptions = {
 
 export class Sprite {
     static loadedImages: Record<string, ImageRegister> = {}
+    static loadedData: Record<string, { frames: Map<string, FrameData> }> = {}
+    static loadedAnimations: Record<string, Record<string, number[]>> = {}
     image: HTMLImageElement
     data: { frames: Map<string, FrameData> }
     current: number
@@ -37,7 +39,7 @@ export class Sprite {
     dataLoaded: boolean
     dir: string
     name: string
-    animations: Record<string, number[]> = {}
+    animations: Record<string, number[]>
     curAnimation: string | undefined
     animTime: number = 0
     animIdx: number = 0
@@ -69,29 +71,38 @@ export class Sprite {
     }
 
     private loadImage(imgDir: string): void {
-        this.image.src = imgDir
-
-        if (imgDir in Sprite.loadedImages) {
+        if (Sprite.loadedImages[imgDir]) {
             this.image = Sprite.loadedImages[imgDir].image
             Sprite.loadedImages[imgDir].instances++
+            this.imgLoaded = true
             return
         }
-        this.image.onload = () => {
+        const image = new Image()
+        image.onload = () => {
             this.imgLoaded = true
             Sprite.loadedImages[imgDir] = {
-                image: this.image,
+                image: image,
                 instances: 0,
             }
+            this.image = image
         }
+        image.src = imgDir
     }
 
     private async loadData(dataDir: string): Promise<void> {
+        if (Sprite.loadedData[dataDir]) {
+            this.data = Sprite.loadedData[dataDir]
+            this.dataLoaded = true
+            return
+        }
         try {
             const response = await fetch(dataDir)
             const jsonData = await response.json()
+            const frames = new Map<string, FrameData>()
             Object.entries(jsonData.frames).forEach(([key, value]) => {
-                this.data.frames.set(key, value as FrameData)
+                frames.set(key, value as FrameData)
             })
+            this.data = Sprite.loadedData[dataDir] = { frames: frames }
             this.dataLoaded = true
         } catch (error) {}
     }
@@ -110,8 +121,12 @@ export class Sprite {
         Sprite.loadedImages[this.dir + this.name + '.png'].instances--
     }
 
-    loadAnimations(animations: Record<string, number[]>) {
-        this.animations = animations
+    loadAnimations(id: string, animations: Record<string, number[]>) {
+        if (Sprite.loadedAnimations[id]) {
+            this.animations = Sprite.loadedAnimations[id]
+            return
+        }
+        this.animations = Sprite.loadedAnimations[id] = animations
     }
 
     setCurrentFrame(frameNumber: number): void {

@@ -39,7 +39,7 @@ export class Gun extends GameObject {
         this.printbox = new HitBox(this.physics, 0, 0, 32, 32, 'standard', 0)
         this.hitbox = new HitBox(this.physics, 0, 0, 32, 32, 'standard', 0)
 
-        this.sprite.loadAnimations({
+        this.sprite.loadAnimations('gun', {
             main: [0],
         })
 

@@ -96,7 +96,7 @@ export class Player extends GameObject {
         this.hitbox = new HitBox(this.physics, 13, 0, 38, 64, 'standard', 0)
         this.standbox = new HitBox(this.physics, 13, 0, 38, 64, 'virtual', 0)
         this.animationQueue = []
-        this.sprite.loadAnimations({
+        this.sprite.loadAnimations('player', {
             empty: [],
             tostand: [5],
             stand: [0, 1],
