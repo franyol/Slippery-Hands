@@ -171,7 +171,7 @@ export class InputHandler {
         if (this.showVirtual) {
             const binding = this.bindings[key]
             const button = binding.virtual
-            return button.keyState
+            return button?.keyState
         } else {
             const binding = this.bindings[key]
             return this.getKeyState(binding.keybinding)
