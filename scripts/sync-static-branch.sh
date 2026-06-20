@@ -24,6 +24,10 @@ git rm -rf . >/dev/null 2>&1 || true
 echo "📥 Checking out only $FOLDER from $SOURCE_BRANCH..."
 git checkout "$SOURCE_BRANCH" -- "$FOLDER"
 
+echo "🧠 Setting git identity for CI..."
+git config --global user.name "github-actions[bot]"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
 echo "📝 Creating commit..."
 git add .
 git commit -m "Sync static folder from $SOURCE_BRANCH - $(date '+%Y-%m-%d %H:%M:%S')"
