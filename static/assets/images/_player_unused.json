@@ -30,7 +30,7 @@
             "trimmed": false,
             "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
             "sourceSize": { "w": 32, "h": 32 },
-            "duration": 110
+            "duration": 100
         },
         "hit": {
             "frame": { "x": 128, "y": 0, "w": 32, "h": 32 },
