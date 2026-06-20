@@ -1,0 +1,24 @@
+/* Remove default margin and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: black;
+}
+
+/* Set canvas to take full screen */
+canvas {
+    display: block; /* Remove any unwanted space below the canvas */
+    width: 100vw; /* 100% of the viewport width */
+    height: 100vh; /* 100% of the viewport height */
+}
