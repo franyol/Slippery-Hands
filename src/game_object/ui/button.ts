@@ -1,127 +1,128 @@
+import { ASSET_BASE } from '../../config/config'
 import { Game } from '../../game/game'
 import { KeyState } from '../../input_handler/handler'
 import { Sprite } from '../../visual/sprite'
 import { GameObject, HitBox, Physics } from '../base'
 
-const spritedir = '../../../static/assets/images/UI/'
+const spritedir = `${ASSET_BASE}/images/UI/`
 
 export class Button extends GameObject {
-    uuid: number = 0
-    prio: number = -1
-    game: Game
+  uuid: number = 0
+  prio: number = -1
+  game: Game
 
-    hitbox: HitBox
-    physics: Physics
-    sprite: Sprite
+  hitbox: HitBox
+  physics: Physics
+  sprite: Sprite
 
-    pressed: boolean = false
-    touchIdx: number | null = null
-    keyState: KeyState = 'iddle'
+  pressed: boolean = false
+  touchIdx: number | null = null
+  keyState: KeyState = 'iddle'
 
-    position: 'Bottom-Right' | 'Bottom-Left'
+  position: 'Bottom-Right' | 'Bottom-Left'
 
-    x: number
-    y: number
+  x: number
+  y: number
 
-    placeholder: boolean
+  placeholder: boolean
 
-    constructor(
-        game: Game,
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        letter: 'A' | 'B',
-        position: 'Bottom-Right' | 'Bottom-Left',
-        placeholder: boolean = false
-    ) {
-        super(0)
-        this.placeholder = placeholder
-        this.game = game
-        this.position = position
-        this.sprite = new Sprite(spritedir, 'Button-' + letter, true)
-        this.physics = new Physics({
-            historyLen: 1,
-            x,
-            y,
-            xfriction: 0,
-            yfriction: 0,
-            parent: this,
-        })
-        this.x = x
-        this.y = y
+  constructor(
+    game: Game,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    letter: 'A' | 'B',
+    position: 'Bottom-Right' | 'Bottom-Left',
+    placeholder: boolean = false
+  ) {
+    super(0)
+    this.placeholder = placeholder
+    this.game = game
+    this.position = position
+    this.sprite = new Sprite(spritedir, 'Button-' + letter, true)
+    this.physics = new Physics({
+      historyLen: 1,
+      x,
+      y,
+      xfriction: 0,
+      yfriction: 0,
+      parent: this,
+    })
+    this.x = x
+    this.y = y
 
-        this.hitbox = new HitBox(this.physics, 0, 0, w, h, 'ui', 0)
-    }
+    this.hitbox = new HitBox(this.physics, 0, 0, w, h, 'ui', 0)
+  }
 
-    update() {
-        if (this.placeholder) return
+  update() {
+    if (this.placeholder) return
 
-        const input = this.game.inputHandler
-        const touches = input.touches
+    const input = this.game.inputHandler
+    const touches = input.touches
 
-        this.physics.x =
-            this.position === 'Bottom-Left'
-                ? 0 + this.x
-                : this.position === 'Bottom-Right'
-                  ? this.game.uicanvas.width - this.x
-                  : this.x
+    this.physics.x =
+      this.position === 'Bottom-Left'
+        ? 0 + this.x
+        : this.position === 'Bottom-Right'
+          ? this.game.uicanvas.width - this.x
+          : this.x
 
-        this.physics.y =
-            this.position === 'Bottom-Left'
-                ? this.game.uicanvas.height - this.y
-                : this.position === 'Bottom-Right'
-                  ? this.game.uicanvas.height - this.y
-                  : this.y
+    this.physics.y =
+      this.position === 'Bottom-Left'
+        ? this.game.uicanvas.height - this.y
+        : this.position === 'Bottom-Right'
+          ? this.game.uicanvas.height - this.y
+          : this.y
 
-        if (this.touchIdx === null) {
-            for (const [id, touch] of Object.entries(touches)) {
-                if (
-                    touch.state !== 'down' ||
-                    touch.isbusy ||
-                    !this.touched(touch.x, touch.y)
-                ) {
-                    continue
-                }
-                this.touchIdx = id as unknown as number
-                this.keyState = 'down'
-                touch.isbusy = true
-            }
-        } else {
-            const touch = input.getTouchState(this.touchIdx)
-            if (touch.state === 'up') {
-                this.keyState = 'up'
-                this.touchIdx = null
-            } else if (!this.touched(touch.x, touch.y)) {
-                this.keyState = 'iddle'
-                this.touchIdx = null
-                touch.isbusy = false
-            }
+    if (this.touchIdx === null) {
+      for (const [id, touch] of Object.entries(touches)) {
+        if (
+          touch.state !== 'down' ||
+          touch.isbusy ||
+          !this.touched(touch.x, touch.y)
+        ) {
+          continue
         }
-        this.pressed = this.keyState === 'down'
-        this.sprite.setCurrentFrame(this.pressed ? 1 : 0)
+        this.touchIdx = id as unknown as number
+        this.keyState = 'down'
+        touch.isbusy = true
+      }
+    } else {
+      const touch = input.getTouchState(this.touchIdx)
+      if (touch.state === 'up') {
+        this.keyState = 'up'
+        this.touchIdx = null
+      } else if (!this.touched(touch.x, touch.y)) {
+        this.keyState = 'iddle'
+        this.touchIdx = null
+        touch.isbusy = false
+      }
     }
+    this.pressed = this.keyState === 'down'
+    this.sprite.setCurrentFrame(this.pressed ? 1 : 0)
+  }
 
-    touched(x: number, y: number) {
-        const xoverlap =
-            x >= this.hitbox.x && x <= this.hitbox.x + this.hitbox.w
-        const yoverlap =
-            y >= this.hitbox.y && y <= this.hitbox.y + this.hitbox.h
+  touched(x: number, y: number) {
+    const xoverlap =
+      x >= this.hitbox.x && x <= this.hitbox.x + this.hitbox.w
+    const yoverlap =
+      y >= this.hitbox.y && y <= this.hitbox.y + this.hitbox.h
 
-        return xoverlap && yoverlap
+    return xoverlap && yoverlap
+  }
+
+  render() {
+    if (this.placeholder) return
+
+    if (this.hitbox) {
+      this.sprite.render({
+        x: this.hitbox.x,
+        y: this.hitbox.y,
+        w: this.hitbox.w,
+        h: this.hitbox.h,
+        flipHorizontal: false,
+      })
     }
-
-    render() {
-        if (this.placeholder) return
-
-        if (this.hitbox) {
-            this.sprite.render({
-                x: this.hitbox.x,
-                y: this.hitbox.y,
-                w: this.hitbox.w,
-                h: this.hitbox.h,
-                flipHorizontal: false,
-            })
-        }
-    }
+  }
 }
