@@ -1,0 +1,18 @@
+name: Sync static branch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "static/**"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync static branch
+        run: bash "${{ github.workspace }}/scripts/sync-static-branch.sh"
