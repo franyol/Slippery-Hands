@@ -6,7 +6,7 @@
             "trimmed": false,
             "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
             "sourceSize": { "w": 32, "h": 32 },
-            "duration": 321
+            "duration": 654
         },
         "standL": {
             "frame": { "x": 32, "y": 0, "w": 32, "h": 32 },
