@@ -11,7 +11,7 @@ git checkout $SOURCE_BRANCH
 git pull origin $SOURCE_BRANCH
 
 echo "🌿 Checkout: $TARGET_BRANCH"
-git checkout $TARGET_BRANCH
+git checkout refs/heads/$TARGET_BRANCH
 
 echo "🧹 Cleaning working tree..."
 git rm -rf . >/dev/null 2>&1 || true
