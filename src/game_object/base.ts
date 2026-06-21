@@ -102,8 +102,20 @@ export class Physics {
         this.x += this.xspeed * dt
         this.y += this.yspeed * dt
 
-        this.xspeed *= Math.exp(-this.xfriction * dt)
-        this.yspeed *= Math.exp(-this.yfriction * dt)
+        const calc_friction = (speed: number, friction: number, dt: number) => {
+            if (speed === 0 || friction === 0) return speed
+            const change = friction * dt
+            if (speed > change) {
+                return speed - change
+            } else if (speed < -change) {
+                return speed + change
+            } else {
+                return 0
+            }
+        }
+
+        this.xspeed = calc_friction(this.xspeed, this.xfriction, dt)
+        this.yspeed = calc_friction(this.yspeed, this.yfriction, dt)
     }
 
     get x(): number {

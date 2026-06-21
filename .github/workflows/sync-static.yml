@@ -1,28 +1,28 @@
 name: Sync static branch
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "static/**"
+    push:
+        branches: [main]
+        paths:
+            - 'static/**'
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
+    sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  persist-credentials: true
 
-      - name: Sync static branch
-        run: bash "${{ github.workspace }}/scripts/sync-static-branch.sh"
-      - name: Trigger cvweb workflow
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          repository: franyol/cvweb
-          event-type: fetch-slippery-hands-static
+            - name: Sync static branch
+              run: bash "${{ github.workspace }}/scripts/sync-static-branch.sh"
+            - name: Trigger cvweb workflow
+              uses: peter-evans/repository-dispatch@v3
+              with:
+                  token: ${{ secrets.PAT_TOKEN }}
+                  repository: franyol/cvweb
+                  event-type: fetch-slippery-hands-static
