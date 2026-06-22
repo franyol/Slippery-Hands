@@ -804,7 +804,6 @@ export class Player extends GameObject {
 
         if (animationIsFinished || skipRestOfAnimation) {
             // callback on end of animations
-            console.log(this.animationQueue)
             this.animationEndCallbacks[this.sprite.curAnimation]?.()
             // select next animation
             if (this.animationQueue.length > 0) {

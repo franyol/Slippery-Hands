@@ -36,6 +36,7 @@ export class Game {
         this.uicanvas.width = window.innerWidth
         this.uicanvas.height = window.innerHeight
         this.fsm.update()
+        console.log(this.dt)
 
         // UI
         if (this.inputHandler.showVirtual) {
