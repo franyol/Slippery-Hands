@@ -65,15 +65,15 @@ export class Player extends GameObject {
     animId: string = ''
 
     runningspeed: number = 400
-    xacceleration: number = this.runningspeed / 10
-    airxacceleration: number = this.runningspeed / 15
+    xacceleration: number = this.runningspeed / 7
+    airxacceleration: number = this.runningspeed / 8
     duckspeed: number = 200
     rollspeed: number = 700
     jumpingForce: number = 2100
     idleTime: number = 5000
     walljumpimpulsey: number = 1800
-    walljumpimpulsex: number = 800
-    wallslidefrictiony: number = 15000
+    walljumpimpulsex: number = 650
+    wallslidefrictiony: number = 10000
 
     // Input
     cooldowns: Record<string, Cooldown>
@@ -90,7 +90,7 @@ export class Player extends GameObject {
             historyLen: 2,
             x,
             y,
-            xfriction: 1700,
+            xfriction: 1300,
             yfriction: 0,
             parent: this,
         })
@@ -287,11 +287,13 @@ export class Player extends GameObject {
                 )
         }
         this.animationEndCallbacks['wallshootend'] = () => {
+            this.states.wallsliding = true
             this.states.wallshootend = false
             this.states.wallshootstart = false
             this.states.cantmove = false
         }
         this.animationEndCallbacks['wallshootenddrop'] = () => {
+            this.states.wallsliding = true
             this.states.wallshootend = false
             this.states.wallshootstart = false
             this.states.cantmove = false
@@ -370,7 +372,9 @@ export class Player extends GameObject {
                                 CollidedSingleton.getInstance().deregister(
                                     this.hitbox
                                 )
-                            } else {
+                            } else if (!this.states.onfloor) {
+                                if (this.physics.yspeed > 20)
+                                    this.physics.yspeed = 80
                                 this.states.wallsliding = true
                                 this.states.headingLeft =
                                     !this.states.headingLeft
@@ -410,7 +414,10 @@ export class Player extends GameObject {
 
         this.handleAnimations()
 
-        if (this.states.wallsliding || this.states.wallshootstart) {
+        if (this.states.wallshootstart || this.states.wallshootend)
+            this.states.wallsliding = true
+
+        if (this.states.wallsliding) {
             this.physics.yfriction = this.wallslidefrictiony
         } else {
             this.physics.yfriction = 0
@@ -797,6 +804,7 @@ export class Player extends GameObject {
 
         if (animationIsFinished || skipRestOfAnimation) {
             // callback on end of animations
+            console.log(this.animationQueue)
             this.animationEndCallbacks[this.sprite.curAnimation]?.()
             // select next animation
             if (this.animationQueue.length > 0) {

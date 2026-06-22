@@ -6,12 +6,24 @@ window.addEventListener('load', () => {
     game.fsm.pushState(new TestState())
 
     let previousTime = performance.now()
+    let accumulator = 0
+    const FIXED_STEP = 16.67 // ms
+
     function animate(currentTime: number) {
-        game.dt = currentTime - previousTime
+        let frame = currentTime - previousTime
         previousTime = currentTime
 
-        game.update()
+        frame = Math.min(frame, 250)
+        accumulator += frame
+
+        while (accumulator >= FIXED_STEP) {
+            game.dt = FIXED_STEP
+            game.update()
+            accumulator -= FIXED_STEP
+        }
+
         game.render()
+
         requestAnimationFrame(animate)
     }
     requestAnimationFrame(animate)

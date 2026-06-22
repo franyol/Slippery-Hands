@@ -64,9 +64,6 @@ export class Gun extends GameObject {
                             break
                         case 'left':
                         case 'right':
-                            console.log(
-                                this.physics._xspeed[this.physics.n - 2]
-                            )
                             this.physics.xspeed -=
                                 this.physics._xspeed[this.physics.n - 2]
                             break

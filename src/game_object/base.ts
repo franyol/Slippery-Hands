@@ -99,9 +99,6 @@ export class Physics {
         const dt = GameSingleton.getInstance().dt / 1000
         this.recordHistory()
 
-        this.x += this.xspeed * dt
-        this.y += this.yspeed * dt
-
         const calc_friction = (speed: number, friction: number, dt: number) => {
             if (speed === 0 || friction === 0) return speed
             const change = friction * dt
@@ -116,6 +113,9 @@ export class Physics {
 
         this.xspeed = calc_friction(this.xspeed, this.xfriction, dt)
         this.yspeed = calc_friction(this.yspeed, this.yfriction, dt)
+
+        this.x += this.xspeed * dt
+        this.y += this.yspeed * dt
     }
 
     get x(): number {
